@@ -8,11 +8,11 @@ class Propositions:
     This class contains constants for different types of propositions.
     """
 
-    ON = 0;
-    ONTABLE = 1;
-    CLEAR = 2;
-    HOLD = 3;
-    EMPTY = 4;
+    ON = "on";
+    ONTABLE = "ontable";
+    CLEAR = "clear";
+    HOLD = "hold";
+    EMPTY = "empty";
 
 class State:
     """
@@ -47,7 +47,7 @@ class TrueSentence:
         Initializes a TrueSentence object.
         """
 
-        self.propositionsType = propositionType
+        self.propositionType = propositionType
         """
         Type of proposition.
         """
@@ -64,8 +64,15 @@ class TrueSentence:
         the TrueSentence object.
         """
 
-        pass
+        resultStr = "("
+        resultStr += self.propositionType
 
+        # TODO
+        # Add arguments separated by comma to the resultStr
+
+        resultStr += ")"
+
+        return resultStr
 
 class Action:
     """
