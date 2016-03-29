@@ -3,6 +3,34 @@
 
 # AI Lab 4
 
+class ArgTypes:
+    """
+    This class contains constants for different types of arguments.
+    """
+
+    VARIABLE = 0
+    TERMINAL = 1
+
+class Arg:
+    """
+    This class represents an argument.
+    """
+
+    def __init__(self, argType, argValue):
+        """
+        Initializes the argument using `argType` and `argValue`.
+        """
+
+        self.type = argType
+        """
+        Type of the argument.
+        """
+
+        self.value = argValue
+        """
+        Value of the argument.
+        """
+
 class Propositions:
     """
     This class contains constants for different types of propositions.
@@ -75,7 +103,7 @@ class TrueSentence:
 
         self.argList = list(argList)
         """
-        List of arguments for the proposition.
+        List of Arg objects for the proposition.
         """
 
 
