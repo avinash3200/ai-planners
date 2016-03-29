@@ -51,7 +51,12 @@ class State:
         the current state.
         """
 
-        pass
+        retStr = ""
+
+        for trueSentence in self.trueSentenceList:
+            retStr += str(trueSentence) + " \n"
+
+        return retStr
 
 class TrueSentence:
     """
