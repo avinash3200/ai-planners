@@ -3,6 +3,17 @@
 
 # AI Lab 4
 
+class Propositions:
+    """
+    This class contains constants for different types of propositions.
+    """
+
+    ON = 0;
+    ONTABLE = 1;
+    CLEAR = 2;
+    HOLD = 3;
+    EMPTY = 4;
+
 class State:
     """
     This class represents the current state.
@@ -15,12 +26,12 @@ class State:
 
         # List of TrueSentence objects.
         # Only has "True" sentences. Rest is assumed False.
-        
+
         pass
 
     def __str__(self):
         """
-        Returns a human-friendly representation of 
+        Returns a human-friendly representation of
         the current state.
         """
 
@@ -31,19 +42,25 @@ class TrueSentence:
     This class represents a sentence whose truth value is "True".
     """
 
-    def __init__(self):
+    def __init__(self, propositionType, argList):
         """
         Initializes a TrueSentence object.
         """
 
-        # Type of proposition
-        # Argument list
+        self.propositionsType = propositionType
+        """
+        Type of proposition.
+        """
 
-        pass
+        self.argList = list(argList)
+        """
+        List of arguments for the proposition.
+        """
+
 
     def __str__(self):
         """
-        Returns a human-friendly representation of 
+        Returns a human-friendly representation of
         the TrueSentence object.
         """
 
@@ -52,7 +69,7 @@ class TrueSentence:
 
 class Action:
     """
-    This class represents an action and applies, reverses, and 
+    This class represents an action and applies, reverses, and
     manages all aspects of actions.
     """
 
@@ -68,7 +85,7 @@ class Action:
 
     def __str__(self):
         """
-        Returns a human-friendly representation of 
+        Returns a human-friendly representation of
         the Action object.
         """
 
@@ -83,7 +100,7 @@ class Action:
 
     def checkApplicability(self, stateObject):
         """
-        A boolean function to check if the `self` action can 
+        A boolean function to check if the `self` action can
         be applied to the `stateObject` state.
         """
 
