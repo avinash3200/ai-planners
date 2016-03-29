@@ -24,10 +24,26 @@ class State:
         Initializes a `State` object.
         """
 
-        # List of TrueSentence objects.
-        # Only has "True" sentences. Rest is assumed False.
+        trueSentenceList = []
+        """
+        A list of objects of class TrueSentence.
+        """
 
-        pass
+    def addTrueSentence(self, trueSentence):
+        """
+        Adds the `trueSentence` object to the state.
+        """
+
+        self.trueSentenceList.append(trueSentence)
+
+    def removeTrueSentence(self, trueSentenceArg):
+        """
+        Removes all objects "equal to" the `trueSentence` object from the state.
+        """
+
+        self.trueSentenceList = [trueSentence for trueSentence in self.trueSentenceList \
+                if trueSentence.propositionType != trueSentenceArg.propositionType \
+                    or cmp(trueSentence.argList, trueSentenceArg.argList) != 0]
 
     def __str__(self):
         """
