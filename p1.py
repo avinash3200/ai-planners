@@ -96,6 +96,23 @@ class State:
         self.trueSentenceList = [trueSentence for trueSentence in self.trueSentenceList \
                 if trueSentence.propositionType != trueSentenceArg.propositionType \
                     or cmp(trueSentence.argList, trueSentenceArg.argList) != 0]
+    
+    def hasTrueSentences(self, trueSentenceList):
+        """
+        Checks if all the sentences in `trueSentenceList` exist in the state.
+        If they do not, returns `False`.
+        """
+
+        for newSentence in trueSentenceList:
+            isPresent = False
+            for selfSentence in self.trueSentenceList:
+                if eq(selfSentence, newSentence):
+                    isPresent = True
+                    break
+            if not isPresent:
+                return False
+        
+        return True
 
     def __str__(self):
         """
