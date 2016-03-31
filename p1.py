@@ -63,13 +63,31 @@ class State:
         A list of objects of class TrueSentence.
         """
 
+        groundTermList = []
+        """
+        A list of ground `Arg` objects in sentences in the `trueSentenceList` list.
+        """
+
     def addTrueSentence(self, trueSentence):
         """
         Adds the `trueSentence` object to the state.
         """
 
-        self.trueSentenceList.append(trueSentence)
+        for arg in trueSentence.argList:
+            if arg.isVariable():
+                return
+        
+        for arg in trueSentence.argList:
+            alreadyPresent = False
+            for selfArg in self.groundTermList:
+                if eq(arg, selfArg):
+                    alreadyPresent = True
+                    break
+            if not alreadyPresent:
+                self.groundTermList.append(arg)
 
+        self.trueSentenceList.append(trueSentence)
+        
     def removeTrueSentence(self, trueSentenceArg):
         """
         Removes all objects "equal to" the `trueSentence` object from the state.
@@ -149,6 +167,20 @@ class Action:
         """
         Effects: a list of TrueSentence objects
         """
+
+        self.variableTermList = []
+        """
+        A list of `Arg` objects in sentences in the `preconditionList` list.
+        """
+
+        for arg in preconditionList.argList:
+            alreadyPresent = False
+            for selfArg in self.variableTermList:
+                if eq(arg, selfArg):
+                    alreadyPresent = True
+                    break
+            if not alreadyPresent:
+                self.variableTermList.append(arg)
 
     def __str__(self):
         """
