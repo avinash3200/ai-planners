@@ -16,7 +16,7 @@ class Arg:
     This class represents an argument.
     """
 
-    def __init__(self, argType, argValue):
+    def __init__(self, argType, argValue, isNegation):
         """
         Initializes the argument using `argType` and `argValue`.
         """
@@ -31,7 +31,12 @@ class Arg:
         Value of the argument.
         """
 
-class Propositions:
+        self.isNegation = isNegation
+        """
+        Helps in distinguishing between positive and negative literals.
+        """
+
+class PropositionTypes:
     """
     This class contains constants for different types of propositions.
     """
@@ -45,6 +50,7 @@ class Propositions:
 class State:
     """
     This class represents the current state.
+    This represents a conjuction of `TrueSentence` objects.
     """
 
     def __init__(self):
@@ -149,7 +155,8 @@ class Action:
 
     def applyAction(self, stateObject):
         """
-        Applies an action after unification.
+        Applies an action after unification to input `stateObject`.
+        Returns a new `State` object.
         """
 
         pass
