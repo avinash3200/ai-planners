@@ -36,6 +36,22 @@ class Arg:
         Helps in distinguishing between positive and negative literals.
         """
 
+    def isVariable(self):
+        """
+        Returns true if 'Arg' object is a variable.
+        """
+
+        return self.type == ArgTypes.VARIABLE
+
+    def __eq__(self, other):
+        """
+        Checks the equality of two `Arg` objects.
+        """
+
+        return self.type == other.type and\
+                self.value == other.value and\
+                self.isNegation == other.isNegation
+
 class PropositionTypes:
     """
     This class contains constants for different types of propositions.
@@ -76,8 +92,7 @@ class State:
         """
 
         self.trueSentenceList = [trueSentence for trueSentence in self.trueSentenceList \
-                if trueSentence.propositionType != trueSentenceArg.propositionType \
-                    or cmp(trueSentence.argList, trueSentenceArg.argList) != 0]
+                if not eq(trueSentence, trueSentenceArg)]
 
     def __str__(self):
         """
@@ -113,6 +128,14 @@ class TrueSentence:
         """
 
 
+    def __eq__(self, other):
+        """
+        Check equality of `TrueSentence` objects.
+        """
+
+        return trueSentence.propositionType == trueSentenceArg.propositionType \
+                    and cmp(trueSentence.argList, trueSentenceArg.argList) == 0
+
     def __str__(self):
         """
         Returns a human-friendly representation of
@@ -144,7 +167,7 @@ class Action:
         """
         Preconditions: a list of TrueSentence objects
         """
-        
+
         self.effectList = effectList
         """
         Effects: a list of TrueSentence objects
@@ -168,24 +191,59 @@ class Action:
 
         return retStr
 
+    def getAssignmentsUtil(self, stateObject, unassignedVariableList, assignments):
+        """
+        Assign groundterms to unassigned variables in `unassignedVariableList`.
+        Returns a dictionary of valid substitutions, if possible.
+        Else, returns None.
+        `assignments` Dictionary of assignments already done.
+        """
+
+        if len(unassignedVariableList) == 0:
+            groundTermTrueSentencesList = []
+            for trueSentence in self.preconditionList:
+                groundTermList = []
+                for variable in trueSentence.argList:
+                    groundTermList.append(assignments[variable.value])
+                groundTermSentencesList.append(TrueSentence(trueSentence.propositionType, groundTermList))
+
+            if stateObject.hasTrueSentences(groundTermTrueSentencesList):
+                return assignments
+            else:
+                return None
+
+        else:
+            thisVariable = unassignedVariableList.pop()
+            for groundTerm in stateObject.groundTermList:
+                assignments[thisVariable.value] = groundTerm
+                if self.getAssignmentsUtil(stateObject, unassignedVariableList) == None:
+                    assignments.pop(thisVariable.value)
+                    continue
+                else:
+                    return assignments
+
+            return None
+
+
     def applyAction(self, stateObject):
         """
         Applies an action after unification to input `stateObject`.
-        Returns a new `State` object, if successful.  
+        Returns a new `State` object, if successful.
         The argument `stateObject` is not modified.
         Returns `False` otherwise.
         """
-        
+
         if not self.isApplicable(stateObject):
             return False
         else:
             pass
 
-    def isApplicable(self, stateObject):
+    def getVariableAssignments(self, stateObject):
         """
-        A boolean function to check if the `self` action can
-        be applied to the `stateObject` state.
+        A function to get assignments for variables so that
+        this action can be applied to `stateObject`.
+        Returns None if no such assignment is possible.
         """
 
-        pass
-
+        assignments = {}
+        return self.getAssignmentsUtil(stateObject, self.variableTermList, assignments)
