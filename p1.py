@@ -74,17 +74,17 @@ class State:
     This represents a conjuction of `TrueSentence` objects.
     """
 
-    def __init__(self):
+    def __init__(self, trueSentenceList = [], groundTermList = []):
         """
         Initializes a `State` object.
         """
 
-        trueSentenceList = []
+        self.trueSentenceList = trueSentenceList
         """
         A list of objects of class TrueSentence.
         """
 
-        groundTermList = []
+        self.groundTermList = groundTermList
         """
         A list of ground `Arg` objects in sentences in the `trueSentenceList` list.
         """
@@ -157,7 +157,7 @@ class TrueSentence:
     This class represents a sentence whose truth value is "True".
     """
 
-    def __init__(self, propositionType, argList):
+    def __init__(self, propositionType, argList, isNegation = False):
         """
         Initializes a TrueSentence object.
         """
@@ -172,6 +172,11 @@ class TrueSentence:
         List of Arg objects for the proposition.
         """
 
+        self.isNegation = isNegation
+        """
+        "Adds" a negation sign before the statement.
+        """
+
 
     def __eq__(self, other):
         """
@@ -179,6 +184,7 @@ class TrueSentence:
         """
 
         return trueSentence.propositionType == trueSentenceArg.propositionType \
+                    and self.isNegation == other.isNegation \
                     and cmp(trueSentence.argList, trueSentenceArg.argList) == 0
 
 
@@ -254,12 +260,39 @@ class Action:
         return retStr
 
 
-    def getAssignmentsUtil(self, stateObject, unassignedVariableList, assignments):
+    def getStateOnAction(self, stateObject, assignments):
+        """
+        Applies `this` Action to `stateObject` with given `assignments`.
+        `assignments` Dictionary of assignments made.
+        Returns a new `State` object.
+        Does not modify `stateObject`.
+        """
+
+        retState = State(stateObject.trueSentenceList, stateObject.groundTermList)
+        for trueSentence in self.effectList:
+            newTrueSentence = TrueSentence(trueSentence.propositionType, [])
+            for variable in trueSentence.argList:
+                    savedArg = assignments[variable.value]
+                    groundTermList.append(Arg(savedArg.argType, savedArg.argValue, savedArg.isNegation))
+
+            newTrueSentence.argList = groundTermList
+            if trueSentence.isNegation:
+                retState.removeTrueSentence(newTrueSentence)
+            else:
+                retState.addTrueSentence(newTrueSentence)
+
+        return retState
+
+
+    def getStatesOnApplicationUtil(self, stateObject, unassignedVariableList, assignments, retList):
         """
         Assign groundterms to unassigned variables in `unassignedVariableList`.
-        Returns a dictionary of valid substitutions, if possible.
-        Else, returns None.
-        `assignments` Dictionary of assignments already done.
+        Returns a list of `State` objects possible after
+        application of `this` Action to `stateObject`
+        `assignments` Dictionary of assignments already made.
+        Keys in this are `value` parameters of `Arg` objects.
+        Values in this dictionary are `Arg` objects.
+        `retList` List of `State` objects already generated.
         """
 
         if len(unassignedVariableList) == 0:
@@ -271,46 +304,32 @@ class Action:
                 groundTermSentencesList.append(TrueSentence(trueSentence.propositionType, groundTermList))
 
             if stateObject.hasTrueSentences(groundTermTrueSentencesList):
-                return assignments
-            else:
-                return None
+                retList.append(self.getStateOnAction(stateObject, assignments))
+
+            return retList
 
         else:
             thisVariable = unassignedVariableList.pop()
             for groundTerm in stateObject.groundTermList:
                 assignments[thisVariable.value] = groundTerm
-                if self.getAssignmentsUtil(stateObject, unassignedVariableList) == None:
-                    assignments.pop(thisVariable.value)
-                    continue
-                else:
-                    return assignments
+                self.getStatesOnApplicationUtil(stateObject, unassignedVariableList, assignments, retList)
+                assignments.pop(thisVariable.value)
 
-            return None
+            return retList
 
 
-    def applyAction(self, stateObject):
+    def getStatesOnApplication(self, stateObject):
         """
-        Applies an action after unification to input `stateObject`.
-        Returns a new `State` object, if successful.
+        Generates states after unification to input `stateObject`.
+        Returns a list of `State` objects.
+        List may be empty.
         The argument `stateObject` is not modified.
-        Returns `False` otherwise.
-        """
-
-        if not self.isApplicable(stateObject):
-            return False
-        else:
-            pass
-
-
-    def getVariableAssignments(self, stateObject):
-        """
-        A function to get assignments for variables so that
-        this action can be applied to `stateObject`.
-        Returns None if no such assignment is possible.
         """
 
         assignments = {}
-        return self.getAssignmentsUtil(stateObject, self.variableTermList, assignments)
+        retList = []
+        return self.getStatesOnApplicationUtil(stateObject, self.variableTermList, assignments, retList)
+
 
 
 def readFile(fileName):
