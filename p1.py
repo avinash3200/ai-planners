@@ -135,15 +135,20 @@ class Action:
     manages all aspects of actions.
     """
 
-    def __init__(self):
+    def __init__(self, preconditionList, effectList):
         """
         Initializes an Action object.
         """
 
-        # Preconditions: a list of TrueSentence objects
-        # Effects: same as above
-
-        pass
+        self.preconditionList = preconditionList
+        """
+        Preconditions: a list of TrueSentence objects
+        """
+        
+        self.effectList = effectList
+        """
+        Effects: a list of TrueSentence objects
+        """
 
     def __str__(self):
         """
@@ -151,17 +156,32 @@ class Action:
         the Action object.
         """
 
-        pass
+        retStr = ""
+        retStr += "Pre: \n"
+        for item in self.preconditionList:
+            retStr += str(item)
+        retStr += "\n"
+        retStr += "Eff: \n"
+        for item in self.effectList:
+            retStr += str(item)
+        retStr += "\n"
+
+        return retStr
 
     def applyAction(self, stateObject):
         """
         Applies an action after unification to input `stateObject`.
-        Returns a new `State` object.
+        Returns a new `State` object, if successful.  
+        The argument `stateObject` is not modified.
+        Returns `False` otherwise.
         """
+        
+        if not self.isApplicable(stateObject):
+            return False
+        else:
+            pass
 
-        pass
-
-    def checkApplicability(self, stateObject):
+    def isApplicable(self, stateObject):
         """
         A boolean function to check if the `self` action can
         be applied to the `stateObject` state.
