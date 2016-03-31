@@ -11,6 +11,7 @@ class ArgTypes:
     VARIABLE = 0
     TERMINAL = 1
 
+
 class Arg:
     """
     This class represents an argument.
@@ -36,12 +37,14 @@ class Arg:
         Helps in distinguishing between positive and negative literals.
         """
 
+
     def isVariable(self):
         """
         Returns true if 'Arg' object is a variable.
         """
 
         return self.type == ArgTypes.VARIABLE
+
 
     def __eq__(self, other):
         """
@@ -51,6 +54,7 @@ class Arg:
         return self.type == other.type and\
                 self.value == other.value and\
                 self.isNegation == other.isNegation
+
 
 class PropositionTypes:
     """
@@ -62,6 +66,7 @@ class PropositionTypes:
     CLEAR = "clear";
     HOLD = "hold";
     EMPTY = "empty";
+
 
 class State:
     """
@@ -79,12 +84,32 @@ class State:
         A list of objects of class TrueSentence.
         """
 
+        groundTermList = []
+        """
+        A list of ground `Arg` objects in sentences in the `trueSentenceList` list.
+        """
+
+
     def addTrueSentence(self, trueSentence):
         """
         Adds the `trueSentence` object to the state.
         """
 
+        for arg in trueSentence.argList:
+            if arg.isVariable():
+                return
+
+        for arg in trueSentence.argList:
+            alreadyPresent = False
+            for selfArg in self.groundTermList:
+                if eq(arg, selfArg):
+                    alreadyPresent = True
+                    break
+            if not alreadyPresent:
+                self.groundTermList.append(arg)
+
         self.trueSentenceList.append(trueSentence)
+
 
     def removeTrueSentence(self, trueSentenceArg):
         """
@@ -93,6 +118,25 @@ class State:
 
         self.trueSentenceList = [trueSentence for trueSentence in self.trueSentenceList \
                 if not eq(trueSentence, trueSentenceArg)]
+
+
+    def hasTrueSentences(self, trueSentenceList):
+        """
+        Checks if all the sentences in `trueSentenceList` exist in the state.
+        If they do not, returns `False`.
+        """
+
+        for newSentence in trueSentenceList:
+            isPresent = False
+            for selfSentence in self.trueSentenceList:
+                if eq(selfSentence, newSentence):
+                    isPresent = True
+                    break
+            if not isPresent:
+                return False
+
+        return True
+
 
     def __str__(self):
         """
@@ -106,6 +150,7 @@ class State:
             retStr += str(trueSentence) + " \n"
 
         return retStr
+
 
 class TrueSentence:
     """
@@ -136,6 +181,7 @@ class TrueSentence:
         return trueSentence.propositionType == trueSentenceArg.propositionType \
                     and cmp(trueSentence.argList, trueSentenceArg.argList) == 0
 
+
     def __str__(self):
         """
         Returns a human-friendly representation of
@@ -151,6 +197,7 @@ class TrueSentence:
         resultStr += ")"
 
         return resultStr
+
 
 class Action:
     """
@@ -173,6 +220,21 @@ class Action:
         Effects: a list of TrueSentence objects
         """
 
+        self.variableTermList = []
+        """
+        A list of `Arg` objects in sentences in the `preconditionList` list.
+        """
+
+        for arg in preconditionList.argList:
+            alreadyPresent = False
+            for selfArg in self.variableTermList:
+                if eq(arg, selfArg):
+                    alreadyPresent = True
+                    break
+            if not alreadyPresent:
+                self.variableTermList.append(arg)
+
+
     def __str__(self):
         """
         Returns a human-friendly representation of
@@ -190,6 +252,7 @@ class Action:
         retStr += "\n"
 
         return retStr
+
 
     def getAssignmentsUtil(self, stateObject, unassignedVariableList, assignments):
         """
@@ -238,6 +301,7 @@ class Action:
         else:
             pass
 
+
     def getVariableAssignments(self, stateObject):
         """
         A function to get assignments for variables so that
@@ -247,3 +311,12 @@ class Action:
 
         assignments = {}
         return self.getAssignmentsUtil(stateObject, self.variableTermList, assignments)
+
+
+def readFile(fileName):
+    """
+    Returns a dictionary with initial state, final state and
+    the "mode" of operation as read from the `fileName` file.
+    """
+
+    pass
