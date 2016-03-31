@@ -238,3 +238,11 @@ class Action:
 
         pass
 
+def readFile(fileName):
+    """
+    Returns a dictionary with initial state, final state and
+    the "mode" of operation as read from the `fileName` file.
+    """
+    
+    pass
+
