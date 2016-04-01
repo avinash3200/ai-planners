@@ -200,7 +200,7 @@ class State:
         retList = []
 
         for action in actionList:
-            retList.extend(action.getStatesOnApplication(currentState))
+            retList.extend(action.getStatesOnApplication(self))
 
         return retList
 
@@ -235,9 +235,9 @@ class TrueSentence:
         Check equality of `TrueSentence` objects.
         """
 
-        return trueSentence.propositionType == trueSentenceArg.propositionType \
+        return self.propositionType == other.propositionType \
                     and self.isNegation == other.isNegation \
-                    and cmp(trueSentence.argList, trueSentenceArg.argList) == 0
+                    and cmp(self.argList, other.argList) == 0
                     
     
     def __ne__(self, other):
@@ -257,16 +257,16 @@ class TrueSentence:
         resultStr = ""
 
         if self.isNegation:
-            resultStr += "~"
+            resultStr += "-"
 
-        resultStr = "("
+        resultStr += "("
         resultStr += self.propositionType
 
         for arg in self.argList:
             resultStr+=" "
             resultStr += str(arg)
         resultStr = resultStr.strip()
-        resultStr += ")"
+        resultStr += ") "
 
         return resultStr
 
@@ -297,14 +297,15 @@ class Action:
         A list of `Arg` objects in sentences in the `preconditionList` list.
         """
 
-        for arg in preconditionList.argList:
-            alreadyPresent = False
-            for selfArg in self.variableTermList:
-                if arg == selfArg:
-                    alreadyPresent = True
-                    break
-            if not alreadyPresent:
-                self.variableTermList.append(arg)
+        for precondition in preconditionList:
+            for arg in precondition.argList:
+                alreadyPresent = False
+                for selfArg in self.variableTermList:
+                    if arg == selfArg:
+                        alreadyPresent = True
+                        break
+                if not alreadyPresent:
+                    self.variableTermList.append(arg)
 
 
     def __str__(self):
@@ -367,7 +368,7 @@ class Action:
                 groundTermList = []
                 for variable in trueSentence.argList:
                     groundTermList.append(assignments[variable.value])
-                groundTermSentencesList.append(TrueSentence(trueSentence.propositionType, groundTermList))
+                groundTermTrueSentencesList.append(TrueSentence(trueSentence.propositionType, groundTermList))
 
             if stateObject.hasTrueSentences(groundTermTrueSentencesList):
                 retList.append(self.getStateOnActionUtil(stateObject, assignments))
@@ -414,7 +415,7 @@ def bfs(startState, goalState, actionList):
         if poppedState.isGoalState(goalState):
             return poppedState
 
-        neighborList = currentState.getNextStates(actionList)
+        neighborList = poppedState.getNextStates(actionList)
 
         for neighborState in neighborList:
             neighborState.prevState = poppedState
@@ -429,37 +430,37 @@ def getActionsForBlocksWorld():
     Hardcoded actions for the Blocks World.
     """
 
-    pickBlock = Action([TrueSentence(PropositionTypes.ONTABLE,[Arg(ArgTypes.VARIABLE, 'block')]), \
-                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block')])], \
+    pickBlock = Action([TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block', False)], False)], \
                         [ \
-                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block')]), \
-                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block')], True), \
-                        TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block'), True])])
+                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block', False)], True), \
+                        TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], True)])
                         
     unstackBlockAFromTopOfBlockB = Action([ \
-            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka'), Arg(ArgTypes.VARIABLE, 'blockb')]), \
-            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka')])], \
+            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka', False), Arg(ArgTypes.VARIABLE, 'blockb', False)], False), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False)], \
             [ \
-            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka')]), \
-            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb')]), \
-            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka'), Arg(ArgTypes.VARIABLE, 'blockb')], True), \
-            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka')], True)])
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb', False)], False), \
+            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka', False), Arg(ArgTypes.VARIABLE, 'blockb', False)], True), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka', False)], True)])
     
     releaseBlock = Action([\
-            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block')])], \
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block', False)], False)], \
             [ \
-            TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block')]), \
-            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block')]), \
-            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block')], True)])
+            TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block', False)], True)])
     
     stackBlockAOnTopOfBlockB = Action([ \
-            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb')]), \
-            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka')])], \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb', False)], False), \
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False)], \
             [ \
-            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka'), Arg(ArgTypes.VARIABLE, 'blockb')], True), \
-            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka')]), \
-            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka')], True), \
-            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb')], True)])
+            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka', False), Arg(ArgTypes.VARIABLE, 'blockb', False)], True), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False), \
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka', False)], True), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb', False)], True)])
     
     return [pickBlock, unstackBlockAFromTopOfBlockB, releaseBlock, stackBlockAOnTopOfBlockB]
 
