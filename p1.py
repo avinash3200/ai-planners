@@ -89,6 +89,11 @@ class State:
         A list of ground `Arg` objects in sentences in the `trueSentenceList` list.
         """
 
+        self.prevState = None
+        """
+        This variable is used to figure out a path after searching is done.
+        """
+
 
     def addTrueSentence(self, trueSentence):
         """
@@ -138,6 +143,17 @@ class State:
         return True
 
 
+    def isGoalState(state, goalState):
+        """
+        Checks if `state` is a goal state by comparing
+        it to `goalState`. Returns `True` if it is, and `False` otherwise.
+        Essentially compares two states.
+        """
+
+        return eq(goalState, state)
+
+
+
     def __str__(self):
         """
         Returns a human-friendly representation of
@@ -176,11 +192,7 @@ class TrueSentence:
         """
         "Adds" a negation sign before the statement.
         """
-        
-        self.prevState = None
-        """
-        This variable is used to figure out a path after searching is done.
-        """
+
 
     def __eq__(self, other):
         """
@@ -198,12 +210,18 @@ class TrueSentence:
         the TrueSentence object.
         """
 
-        resultStr = "("
+        resultStr = ""
+
+        if self.isNegation:
+            resultStr += "-"
+
         resultStr += self.propositionType
 
-        # TODO
-        # Add arguments separated by comma to the resultStr
-
+        resultStr = "("
+        for arg in self.argList:
+            resultStr += str(arg)
+            resultStr += ", "
+        resultStr = resultStr.strip(", ")
         resultStr += ")"
 
         return resultStr
@@ -334,15 +352,6 @@ class Action:
         retList = []
         return self.getStatesOnApplicationUtil(stateObject, self.variableTermList, assignments, retList)
 
-
-def isGoalState(state, goalState):
-    """
-    Checks if `state` is a goal state by comparing
-    it to `goalState`. Returns `True` if it is, and `False` otherwise.  
-    Essentially compares two states.
-    """
-
-    return eq(goalState, state)
 
 def bfs(startState, goalState):
     pass
