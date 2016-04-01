@@ -237,7 +237,7 @@ class TrueSentence:
 
         return self.propositionType == other.propositionType \
                     and self.isNegation == other.isNegation \
-                    and cmp(self.argList, other.argList) == 0
+                    and cmpList(self.argList, other.argList)
                     
     
     def __ne__(self, other):
@@ -423,6 +423,35 @@ def bfs(startState, goalState, actionList):
         bfsQueue.extend(neighborList)
 
     return None
+
+
+def cmpList(first, second):
+    """
+    "Deep" compares two lists. Returns `True` of they are equal, and 
+    `False` otherwise.
+    """
+
+    if not (len(first) == len(second)):
+        return False
+
+    dupFirst = list(first)
+    dupSecond = list(second)
+
+    for item in dupFirst:
+        exists = False
+        itemInList = None
+        for other in dupSecond:
+            if item == other:
+                exists = True
+                itemInList = other
+                break
+        
+        if not exists:
+            return False
+
+        dupSecond.remove(itemInList)
+
+    return True
 
 
 def getActionsForBlocksWorld():
