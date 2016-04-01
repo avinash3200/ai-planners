@@ -37,6 +37,23 @@ class Arg:
         Helps in distinguishing between positive and negative literals.
         """
 
+    def __str__(self):
+        """
+        Returns a human-friendly representation of
+        the argument.
+        """
+        retStr = ""
+        
+        if self.isNegation:
+            retStr += "-"
+
+        if self.type == ArgTypes.TERMINAL:
+            retStr += str(self.value).upper()
+        else:
+            retStr += str(self.value).lower()
+
+        return retStr
+
 
     def isVariable(self):
         """
