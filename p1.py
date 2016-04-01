@@ -3,6 +3,8 @@
 
 # AI Lab 4
 
+import pdb
+
 class ArgTypes:
     """
     This class contains constants for different types of arguments.
@@ -383,6 +385,7 @@ class Action:
                 self.getStatesOnApplicationUtil(stateObject, unassignedVariableList, assignments, retList)
                 assignments.pop(thisVariable.value)
 
+            unassignedVariableList.append(thisVariable)
             return retList
 
 
@@ -407,12 +410,16 @@ def bfs(startState, goalState, actionList):
     obtained by tracing the `prevState` pointers in states.
     """
 
+    # pdb.set_trace()
     bfsQueue = []
     bfsQueue.append(startState)
 
+    print(startState)
+
     while len(bfsQueue) > 0:
         poppedState = bfsQueue.pop(0)
-
+        print("**new**")
+        print(poppedState)
         if poppedState.isGoalState(goalState):
             return poppedState
 
@@ -506,8 +513,11 @@ def readFile(fileName):
     retDict = {}
 
     with open(fileName) as inFile:
-        readString = inFile.read()
-        lines = readString.splitlines()
+        
+        pdb.set_trace()
+        
+        lines = inFile.readlines()
+        lines = [line.strip() for line in lines]
 
         try:
             numberBlocks = int(lines[0])
@@ -536,8 +546,7 @@ def readFile(fileName):
                 break
             if word[0] == '(':
                 argList = []
-                word = word.strip('(')
-                propositionType = word
+                propositionType = word.strip('(')
             else:
                 try:
                     argList.append(completeBlockList[int(word.strip(')')) - 1])
