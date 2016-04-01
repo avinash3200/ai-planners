@@ -176,7 +176,11 @@ class TrueSentence:
         """
         "Adds" a negation sign before the statement.
         """
-
+        
+        self.prevState = None
+        """
+        This variable is used to figure out a path after searching is done.
+        """
 
     def __eq__(self, other):
         """
@@ -331,6 +335,18 @@ class Action:
         return self.getStatesOnApplicationUtil(stateObject, self.variableTermList, assignments, retList)
 
 
+def isGoalState(state, goalState):
+    """
+    Checks if `state` is a goal state by comparing
+    it to `goalState`. Returns `True` if it is, and `False` otherwise.  
+    Essentially compares two states.
+    """
+
+    return eq(goalState, state)
+
+def bfs(startState, goalState):
+    pass
+
 
 def readFile(fileName):
     """
@@ -339,3 +355,4 @@ def readFile(fileName):
     """
 
     pass
+
