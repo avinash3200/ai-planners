@@ -82,7 +82,6 @@ class PropositionTypes:
     ONTABLE = "ontable";
     CLEAR = "clear";
     HOLD = "hold";
-    EMPTY = "empty";
 
 
 class State:
@@ -447,7 +446,7 @@ def readFile(fileName):
         argList = []
         propositionType = None
         for word in words:
-            if word == '(empty)'
+            if word == '(empty)':
                 break
             if word[0] == '(':
                 argList = []
@@ -473,10 +472,10 @@ def readFile(fileName):
         propositionType = None
         isNegation = False
         for word in words:
-            if word == '(empty)'
+            if word == '(empty)':
                 break
 
-            if word[0] == '~'
+            if word[0] == '~':
                 isNegation = True
                 word = word.strip('~')
 
