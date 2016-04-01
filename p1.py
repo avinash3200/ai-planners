@@ -185,6 +185,19 @@ class State:
         return retStr
 
 
+    def getNextStates(self, actionList):
+        """
+        Applies each action in `actionList` to the `self` state
+        and returns all the states generated.
+        """
+
+        retList = []
+
+        for action in actionList:
+            retList.extend(action.getStatesOnApplication(currentState))
+
+        return retList
+
 class TrueSentence:
     """
     This class represents a sentence whose truth value is "True".
@@ -299,7 +312,7 @@ class Action:
         return retStr
 
 
-    def getStateOnAction(self, stateObject, assignments):
+    def getStateOnActionUtil(self, stateObject, assignments):
         """
         Applies `this` Action to `stateObject` with given `assignments`.
         `assignments` Dictionary of assignments made.
@@ -343,7 +356,7 @@ class Action:
                 groundTermSentencesList.append(TrueSentence(trueSentence.propositionType, groundTermList))
 
             if stateObject.hasTrueSentences(groundTermTrueSentencesList):
-                retList.append(self.getStateOnAction(stateObject, assignments))
+                retList.append(self.getStateOnActionUtil(stateObject, assignments))
 
             return retList
 
@@ -369,9 +382,34 @@ class Action:
         retList = []
         return self.getStatesOnApplicationUtil(stateObject, self.variableTermList, assignments, retList)
 
+    
 
-def bfs(startState, goalState):
-    pass
+
+def bfs(startState, goalState, actionList):
+    """
+    Performs a breadth-first search on states.
+    Returns a `State` object which is equivalent
+    to the goal state (`goalState`). A plan can be 
+    obtained by tracing the `prevState` pointers in states.
+    """
+
+    bfsQueue = []
+    bfsQueue.append(startState)
+    
+    while len(bfsQueue) > 0:
+        poppedState = bfsQueue.pop(0)
+        
+        if poppedState.isGoalState(goalState):
+            return poppedState
+        
+        neighborList = currentState.getNextStates(actionList)
+
+        for neighborState in neighborList:
+            neighborState.prevState = poppedState
+
+        bfsQueue.extend(neighborList)
+
+    return None
 
 
 def readFile(fileName):
