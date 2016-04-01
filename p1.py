@@ -185,6 +185,19 @@ class State:
         return retStr
 
 
+    def getNextStates(self, actionList):
+        """
+        Applies each action in `actionList` to the `self` state
+        and returns all the states generated.
+        """
+
+        retList = []
+
+        for action in actionList:
+            retList.extend(action.getStatesOnApplication(currentState))
+
+        return retList
+
 class TrueSentence:
     """
     This class represents a sentence whose truth value is "True".
@@ -230,15 +243,15 @@ class TrueSentence:
         resultStr = ""
 
         if self.isNegation:
-            resultStr += "-"
-
-        resultStr += self.propositionType
+            resultStr += "~"
 
         resultStr = "("
+        resultStr += self.propositionType
+
         for arg in self.argList:
+            resultStr+=" "
             resultStr += str(arg)
-            resultStr += ", "
-        resultStr = resultStr.strip(", ")
+        resultStr = resultStr.strip()
         resultStr += ")"
 
         return resultStr
@@ -299,7 +312,7 @@ class Action:
         return retStr
 
 
-    def getStateOnAction(self, stateObject, assignments):
+    def getStateOnActionUtil(self, stateObject, assignments):
         """
         Applies `this` Action to `stateObject` with given `assignments`.
         `assignments` Dictionary of assignments made.
@@ -343,7 +356,7 @@ class Action:
                 groundTermSentencesList.append(TrueSentence(trueSentence.propositionType, groundTermList))
 
             if stateObject.hasTrueSentences(groundTermTrueSentencesList):
-                retList.append(self.getStateOnAction(stateObject, assignments))
+                retList.append(self.getStateOnActionUtil(stateObject, assignments))
 
             return retList
 
@@ -370,9 +383,32 @@ class Action:
         return self.getStatesOnApplicationUtil(stateObject, self.variableTermList, assignments, retList)
 
 
-def bfs(startState, goalState):
+def bfs(startState, goalState, actionList):
     """
+    Performs a breadth-first search on states.
+    Returns a `State` object which is equivalent
+    to the goal state (`goalState`). A plan can be
+    obtained by tracing the `prevState` pointers in states.
     """
+
+    bfsQueue = []
+    bfsQueue.append(startState)
+
+    while len(bfsQueue) > 0:
+        poppedState = bfsQueue.pop(0)
+
+        if poppedState.isGoalState(goalState):
+            return poppedState
+
+        neighborList = currentState.getNextStates(actionList)
+
+        for neighborState in neighborList:
+            neighborState.prevState = poppedState
+
+        bfsQueue.extend(neighborList)
+
+    return None
+
 
 def readFile(fileName):
     """
@@ -407,12 +443,54 @@ def readFile(fileName):
             print "Don't know where the initial state starts from!"
             return None
         initState = State()
-#TODO
+        words = lines[3].split()
+        argList = []
+        propositionType = None
+        for word in words:
+            if word == '(empty)'
+                break
+            if word[0] == '(':
+                argList = []
+                word = word.strip('(')
+                propositionType = word
+            else:
+                try:
+                    argList.append(completeBlockList[int(word.strip(')')) - 1])
+                except:
+                    print "Sorry! Can't read the file!"
+                    return None
+                if word[-1] == ')':
+                    initState.addTrueSentence(TrueSentence(propositionType, argList))
+
         retDict['initState'] = initState
 
-        if not lines[2] == 'final':
-            print "Don't know where the final state starts from!"
+        if not lines[4] == 'goal':
+            print "Don't know where the goal state starts from!"
             return None
         goalState = State()
-#TODO
+        words = lines[5].split()
+        argList = []
+        propositionType = None
+        isNegation = False
+        for word in words:
+            if word == '(empty)'
+                break
+
+            if word[0] == '~'
+                isNegation = True
+                word = word.strip('~')
+
+            if word[0] == '(':
+                argList = []
+                propositionType = word.strip('(')
+            else:
+                try:
+                    argList.append(completeBlockList[int(word.strip(')')) - 1])
+                except:
+                    print "Sorry! Can't read the file!"
+                    return None
+                if word[-1] == ')':
+                    goalState.addTrueSentence(TrueSentence(propositionType, argList, isNegation))
+                    isNegation = False
+
         retDict['goalState'] = goalState
