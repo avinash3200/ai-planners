@@ -494,3 +494,5 @@ def readFile(fileName):
                     isNegation = False
 
         retDict['goalState'] = goalState
+        return retDict
+
