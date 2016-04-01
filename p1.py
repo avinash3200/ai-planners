@@ -45,7 +45,7 @@ class Arg:
         retStr = ""
 
         if self.isNegation:
-            retStr += "-"
+            retStr += "~"
 
         if self.type == ArgTypes.TERMINAL:
             retStr += str(self.value).upper()
@@ -257,7 +257,7 @@ class TrueSentence:
         resultStr = ""
 
         if self.isNegation:
-            resultStr += "-"
+            resultStr += "~"
 
         resultStr += "("
         resultStr += self.propositionType
@@ -338,9 +338,10 @@ class Action:
         retState = State(stateObject.trueSentenceList, stateObject.groundTermList)
         for trueSentence in self.effectList:
             newTrueSentence = TrueSentence(trueSentence.propositionType, [])
+            groundTermList = []
             for variable in trueSentence.argList:
                     savedArg = assignments[variable.value]
-                    groundTermList.append(Arg(savedArg.argType, savedArg.argValue, savedArg.isNegation))
+                    groundTermList.append(Arg(savedArg.type, savedArg.value, savedArg.isNegation))
 
             newTrueSentence.argList = groundTermList
             if trueSentence.isNegation:
