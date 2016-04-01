@@ -73,12 +73,12 @@ class Arg:
         return self.type == other.type and\
                 self.value == other.value and\
                 self.isNegation == other.isNegation
-                
+
     def __ne__(self, other):
         """
         Checks the inequality of two `Arg` objects.
         """
-        
+
         return not self.__eq__(other)
 
 
@@ -91,7 +91,7 @@ class PropositionTypes:
     ONTABLE = "ontable";
     CLEAR = "clear";
     HOLD = "hold";
-
+    EMPTY = "empty";
 
 class State:
     """
@@ -99,17 +99,17 @@ class State:
     This represents a conjuction of `TrueSentence` objects.
     """
 
-    def __init__(self, trueSentenceList = [], groundTermList = []):
+    def __init__(self, trueSentenceList, groundTermList):
         """
         Initializes a `State` object.
         """
 
-        self.trueSentenceList = trueSentenceList
+        self.trueSentenceList = list(trueSentenceList)
         """
         A list of objects of class TrueSentence.
         """
 
-        self.groundTermList = groundTermList
+        self.groundTermList = list(groundTermList)
         """
         A list of ground `Arg` objects in sentences in the `trueSentenceList` list.
         """
@@ -118,6 +118,27 @@ class State:
         """
         This variable is used to figure out a path after searching is done.
         """
+
+        self.prevAction = None
+        """
+        Stores the action taken to reach to this `State`.
+        """
+
+
+    def tracePath(self):
+        """
+        Trace path from initial state to `self`.
+        """
+
+        pathList = []
+        current = self
+
+        while current:
+            pathList.append(current)
+            current = current.prevState
+
+        pathList.reverse()
+        return pathList
 
 
     def addTrueSentence(self, trueSentence):
@@ -178,6 +199,19 @@ class State:
         return goalState == state
 
 
+    def __eq__(self, other):
+        """
+        Checks equality of one `State` object with another.
+        """
+        return cmpList(self.trueSentenceList, other.trueSentenceList)
+
+    def __ne__(self, other):
+        """
+        Checks the inequality of two `State` objects.
+        """
+
+        return not self.__eq__(other)
+
 
     def __str__(self):
         """
@@ -190,6 +224,7 @@ class State:
         for trueSentence in self.trueSentenceList:
             retStr += str(trueSentence) + " \n"
 
+        retStr += "Previous Action : " + str(self.prevAction)
         return retStr
 
 
@@ -240,13 +275,13 @@ class TrueSentence:
         return self.propositionType == other.propositionType \
                     and self.isNegation == other.isNegation \
                     and cmpList(self.argList, other.argList)
-                    
-    
+
+
     def __ne__(self, other):
         """
         Checks the inequality of two `TrueSentence` objects.
         """
-        
+
         return not self.__eq__(other)
 
 
@@ -279,17 +314,22 @@ class Action:
     manages all aspects of actions.
     """
 
-    def __init__(self, preconditionList, effectList):
+    def __init__(self, name, preconditionList, effectList):
         """
         Initializes an Action object.
         """
 
-        self.preconditionList = preconditionList
+        self.name = name
+        """
+        Name of the action.
+        """
+
+        self.preconditionList = list(preconditionList)
         """
         Preconditions: a list of TrueSentence objects
         """
 
-        self.effectList = effectList
+        self.effectList = list(effectList)
         """
         Effects: a list of TrueSentence objects
         """
@@ -316,12 +356,12 @@ class Action:
         the Action object.
         """
 
-        retStr = ""
-        retStr += "Pre: \n"
+        retStr = "Action : " + self.name + "\n"
+        retStr += "Pre: "
         for item in self.preconditionList:
             retStr += str(item)
         retStr += "\n"
-        retStr += "Eff: \n"
+        retStr += "Eff: "
         for item in self.effectList:
             retStr += str(item)
         retStr += "\n"
@@ -351,6 +391,7 @@ class Action:
             else:
                 retState.addTrueSentence(newTrueSentence)
 
+        retState.prevAction = self
         return retState
 
 
@@ -414,12 +455,8 @@ def bfs(startState, goalState, actionList):
     bfsQueue = []
     bfsQueue.append(startState)
 
-    print(startState)
-
     while len(bfsQueue) > 0:
         poppedState = bfsQueue.pop(0)
-        print("**new**")
-        print(poppedState)
         if poppedState.isGoalState(goalState):
             return poppedState
 
@@ -435,7 +472,7 @@ def bfs(startState, goalState, actionList):
 
 def cmpList(first, second):
     """
-    "Deep" compares two lists. Returns `True` of they are equal, and 
+    "Deep" compares two lists. Returns `True` of they are equal, and
     `False` otherwise.
     """
 
@@ -453,7 +490,7 @@ def cmpList(first, second):
                 exists = True
                 itemInList = other
                 break
-        
+
         if not exists:
             return False
 
@@ -467,38 +504,44 @@ def getActionsForBlocksWorld():
     Hardcoded actions for the Blocks World.
     """
 
-    pickBlock = Action([TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
-                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block', False)], False)], \
+    pickBlock = Action("pick", [TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
+                        TrueSentence(PropositionTypes.EMPTY, [], False)], \
                         [ \
                         TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
                         TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block', False)], True), \
-                        TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], True)])
-                        
-    unstackBlockAFromTopOfBlockB = Action([ \
+                        TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], True), \
+                        TrueSentence(PropositionTypes.EMPTY, [], True)])
+
+    unstackBlockAFromTopOfBlockB = Action("unstack", [ \
             TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka', False), Arg(ArgTypes.VARIABLE, 'blockb', False)], False), \
-            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False)], \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False), \
+                        TrueSentence(PropositionTypes.EMPTY, [], False)], \
             [ \
             TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False), \
             TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb', False)], False), \
             TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka', False), Arg(ArgTypes.VARIABLE, 'blockb', False)], True), \
-            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka', False)], True)])
-    
-    releaseBlock = Action([\
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka', False)], True), \
+                        TrueSentence(PropositionTypes.EMPTY, [], True)])
+
+    releaseBlock = Action("release", [\
             TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block', False)], False)], \
             [ \
             TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
             TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
-            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block', False)], True)])
-    
-    stackBlockAOnTopOfBlockB = Action([ \
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block', False)], True), \
+                        TrueSentence(PropositionTypes.EMPTY, [], False)])
+
+    stackBlockAOnTopOfBlockB = Action("stack", [ \
             TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb', False)], False), \
             TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False)], \
             [ \
-            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka', False), Arg(ArgTypes.VARIABLE, 'blockb', False)], True), \
+            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka', False), Arg(ArgTypes.VARIABLE, 'blockb', False)], False), \
             TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False), \
             TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka', False)], True), \
-            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb', False)], True)])
-    
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb', False)], True), \
+                        TrueSentence(PropositionTypes.EMPTY, [], False)])
+
     return [pickBlock, unstackBlockAFromTopOfBlockB, releaseBlock, stackBlockAOnTopOfBlockB]
 
 
@@ -513,9 +556,9 @@ def readFile(fileName):
     retDict = {}
 
     with open(fileName) as inFile:
-        
-        pdb.set_trace()
-        
+
+        # pdb.set_trace()
+
         lines = inFile.readlines()
         lines = [line.strip() for line in lines]
 
@@ -537,13 +580,11 @@ def readFile(fileName):
         if not lines[2] == 'initial':
             print("Don't know from where the initial state starts!")
             return None
-        initState = State()
+        initState = State([], [])
         words = lines[3].split()
         argList = []
         propositionType = None
         for word in words:
-            if word == '(empty)':
-                break
             if word[0] == '(':
                 argList = []
                 propositionType = word.strip('(')
@@ -553,23 +594,21 @@ def readFile(fileName):
                 except:
                     print("Sorry! Can't read the file!")
                     return None
-                if word[-1] == ')':
-                    initState.addTrueSentence(TrueSentence(propositionType, argList))
+            if word[-1] == ')':
+                initState.addTrueSentence(TrueSentence(propositionType.strip(')'), argList))
 
         retDict['initState'] = initState
 
         if not lines[4] == 'goal':
             print("Don't know from where the goal state starts!")
             return None
-        goalState = State()
+
+        goalState = State([], [])
         words = lines[5].split()
         argList = []
         propositionType = None
         isNegation = False
         for word in words:
-            if word == '(empty)':
-                break
-
             if word[0] == '~':
                 isNegation = True
                 word = word.strip('~')
@@ -583,9 +622,9 @@ def readFile(fileName):
                 except:
                     print("Sorry! Can't read the file!")
                     return None
-                if word[-1] == ')':
-                    goalState.addTrueSentence(TrueSentence(propositionType, argList, isNegation))
-                    isNegation = False
+            if word[-1] == ')':
+                goalState.addTrueSentence(TrueSentence(propositionType.strip(')'), argList, isNegation))
+                isNegation = False
 
         retDict['goalState'] = goalState
         return retDict
