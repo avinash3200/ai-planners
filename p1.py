@@ -71,6 +71,13 @@ class Arg:
         return self.type == other.type and\
                 self.value == other.value and\
                 self.isNegation == other.isNegation
+                
+    def __ne__(self, other):
+        """
+        Checks the inequality of two `Arg` objects.
+        """
+        
+        return not self.__eq__(other)
 
 
 class PropositionTypes:
@@ -123,7 +130,7 @@ class State:
         for arg in trueSentence.argList:
             alreadyPresent = False
             for selfArg in self.groundTermList:
-                if eq(arg, selfArg):
+                if arg == selfArg:
                     alreadyPresent = True
                     break
             if not alreadyPresent:
@@ -138,7 +145,7 @@ class State:
         """
 
         self.trueSentenceList = [trueSentence for trueSentence in self.trueSentenceList \
-                if not eq(trueSentence, trueSentenceArg)]
+                if not (trueSentence == trueSentenceArg)]
 
 
     def hasTrueSentences(self, trueSentenceList):
@@ -150,7 +157,7 @@ class State:
         for newSentence in trueSentenceList:
             isPresent = False
             for selfSentence in self.trueSentenceList:
-                if eq(selfSentence, newSentence):
+                if selfSentence == newSentence:
                     isPresent = True
                     break
             if not isPresent:
@@ -166,7 +173,7 @@ class State:
         Essentially compares two states.
         """
 
-        return eq(goalState, state)
+        return goalState == state
 
 
 
@@ -231,6 +238,14 @@ class TrueSentence:
         return trueSentence.propositionType == trueSentenceArg.propositionType \
                     and self.isNegation == other.isNegation \
                     and cmp(trueSentence.argList, trueSentenceArg.argList) == 0
+                    
+    
+    def __ne__(self, other):
+        """
+        Checks the inequality of two `TrueSentence` objects.
+        """
+        
+        return not self.__eq__(other)
 
 
     def __str__(self):
@@ -285,7 +300,7 @@ class Action:
         for arg in preconditionList.argList:
             alreadyPresent = False
             for selfArg in self.variableTermList:
-                if eq(arg, selfArg):
+                if arg == selfArg:
                     alreadyPresent = True
                     break
             if not alreadyPresent:
@@ -409,6 +424,46 @@ def bfs(startState, goalState, actionList):
     return None
 
 
+def getActionsForBlocksWorld():
+    """
+    Hardcoded actions for the Blocks World.
+    """
+
+    pickBlock = Action([TrueSentence(PropositionTypes.ONTABLE,[Arg(ArgTypes.VARIABLE, 'block')]), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block')])], \
+                        [ \
+                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block')]), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block')], True), \
+                        TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block'), True])])
+                        
+    unstackBlockAFromTopOfBlockB = Action([ \
+            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka'), Arg(ArgTypes.VARIABLE, 'blockb')]), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka')])], \
+            [ \
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka')]), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb')]), \
+            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka'), Arg(ArgTypes.VARIABLE, 'blockb')], True), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka')], True)])
+    
+    releaseBlock = Action([\
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block')])], \
+            [ \
+            TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block')]), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block')]), \
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block')], True)])
+    
+    stackBlockAOnTopOfBlockB = Action([ \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb')]), \
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka')])], \
+            [ \
+            TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka'), Arg(ArgTypes.VARIABLE, 'blockb')], True), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka')]), \
+            TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka')], True), \
+            TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb')], True)])
+    
+    return [pickBlock, unstackBlockAFromTopOfBlockB, releaseBlock, stackBlockAOnTopOfBlockB]
+
+
 def readFile(fileName):
     """
     Returns a dictionary with initial state, final state and
@@ -426,20 +481,20 @@ def readFile(fileName):
         try:
             numberBlocks = int(lines[0])
         except ValueError:
-            print "Please tell me the number of blocks!"
+            print("Please tell me the number of blocks!")
             return None
         completeBlockList = []
         for i in range(1, numberBlocks+1):
-            completeBlockList.append(Arg(ArgTypes.CONSTANT, i, False))
+            completeBlockList.append(Arg(ArgTypes.TERMINAL, i, False))
 
         validPlanners = ['f', 'a', 'g']
         if not lines[1] in validPlanners:
-            print "Oh! Looks like you want a planner that we don't have!"
+            print("Oh! Looks like you want a planner that we don't have!")
             return None
         retDict['planner'] = lines[1]
 
         if not lines[2] == 'initial':
-            print "Don't know where the initial state starts from!"
+            print("Don't know from where the initial state starts!")
             return None
         initState = State()
         words = lines[3].split()
@@ -456,7 +511,7 @@ def readFile(fileName):
                 try:
                     argList.append(completeBlockList[int(word.strip(')')) - 1])
                 except:
-                    print "Sorry! Can't read the file!"
+                    print("Sorry! Can't read the file!")
                     return None
                 if word[-1] == ')':
                     initState.addTrueSentence(TrueSentence(propositionType, argList))
@@ -464,7 +519,7 @@ def readFile(fileName):
         retDict['initState'] = initState
 
         if not lines[4] == 'goal':
-            print "Don't know where the goal state starts from!"
+            print("Don't know from where the goal state starts!")
             return None
         goalState = State()
         words = lines[5].split()
@@ -486,7 +541,7 @@ def readFile(fileName):
                 try:
                     argList.append(completeBlockList[int(word.strip(')')) - 1])
                 except:
-                    print "Sorry! Can't read the file!"
+                    print("Sorry! Can't read the file!")
                     return None
                 if word[-1] == ')':
                     goalState.addTrueSentence(TrueSentence(propositionType, argList, isNegation))
