@@ -43,7 +43,7 @@ class Arg:
         the argument.
         """
         retStr = ""
-        
+
         if self.isNegation:
             retStr += "-"
 
@@ -371,14 +371,48 @@ class Action:
 
 
 def bfs(startState, goalState):
-    pass
-
+    """
+    """
 
 def readFile(fileName):
     """
     Returns a dictionary with initial state, final state and
     the "mode" of operation as read from the `fileName` file.
+    Keys in dictionary are:
+        planner, initState, goalState
     """
 
-    pass
+    retDict = {}
 
+    with open(fileName) as inFile:
+        readString = inFile.read()
+        lines = readString.splitlines()
+
+        try:
+            numberBlocks = int(lines[0])
+        except ValueError:
+            print "Please tell me the number of blocks!"
+            return None
+        completeBlockList = []
+        for i in range(1, numberBlocks+1):
+            completeBlockList.append(Arg(ArgTypes.CONSTANT, i, False))
+
+        validPlanners = ['f', 'a', 'g']
+        if not lines[1] in validPlanners:
+            print "Oh! Looks like you want a planner that we don't have!"
+            return None
+        retDict['planner'] = lines[1]
+
+        if not lines[2] == 'initial':
+            print "Don't know where the initial state starts from!"
+            return None
+        initState = State()
+#TODO
+        retDict['initState'] = initState
+
+        if not lines[2] == 'final':
+            print "Don't know where the final state starts from!"
+            return None
+        goalState = State()
+#TODO
+        retDict['goalState'] = goalState
