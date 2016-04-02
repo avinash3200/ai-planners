@@ -293,7 +293,11 @@ class TrueSentence:
         """
         "Adds" a negation sign before the statement.
         """
-
+        
+        self.truthValue = False
+        """
+        Truth value of the statement for Goal Stack planner.
+        """
 
     def __eq__(self, other):
         """
@@ -482,6 +486,37 @@ class Action:
         return self.getStatesOnApplicationUtil(stateObject, self.variableTermList, assignments, retList)
 
 
+def gsp(startState, goalState, actionList):
+    """
+    Does Goal Stack planning.
+    """
+    
+    stack = []
+    currentState = startState
+
+    stack.append(goalState.trueSentenceList)
+    for trueSentence in goalState.trueSentenceList:
+        stack.append([trueSentence])
+
+    while len(stack > 0)
+        poppedElement = stack.pop(0)
+        if type(poppedElement) is list:
+            if not currentState.hasTrueSentences(poppedElement):
+                if len(poppedElement) > 1:
+                    stack.append(poppedElement)
+                    for trueSentence in poppedElement:
+                        stack.append([trueSentence])
+                else:
+                    # find out a relevant action
+                    stack.append(relevantAction.preconditionList)
+                    for trueSentence in relevantAction.preconditionList:
+                        stack.append([trueSentence])
+        else:
+            # add action to plan
+
+    return currentState
+
+
 def bfs(startState, goalState, actionList):
     """
     Performs a breadth-first search on states.
@@ -497,6 +532,7 @@ def bfs(startState, goalState, actionList):
     while len(bfsQueue) > 0:
         poppedState = bfsQueue.pop(0)
         print("Searching plans of depth: " + str(poppedState.depth), end = "\r")
+        
         if poppedState.isGoalState(goalState):
             return poppedState
 
@@ -727,5 +763,5 @@ def main():
     
     return
 
-main()
+# main()
 
