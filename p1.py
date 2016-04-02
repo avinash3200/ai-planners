@@ -3,7 +3,8 @@
 
 # AI Lab 4
 
-import pdb
+from __future__ import print_function
+import sys
 
 class ArgTypes:
     """
@@ -124,10 +125,28 @@ class State:
         Stores the action taken to reach to this `State`.
         """
 
+        self.prevAssignments = None
+        """
+        Stores the assignments made in the previous state to reach this state.
+        """
+
+        self.prevPrintData = ""
+        """
+        Stores the string representing a combination of `self.prevAction` 
+        and `self.prevAssignments`.
+        """
+        self.depth = 0
+        """
+        Housekeeping variable used to print progress.
+        """
+
 
     def tracePath(self):
         """
         Trace path from initial state to `self`.
+        Returns a dictionary with:  
+        (1) A string with actions (in order) in plan.
+        (2) A list of states in the plan.
         """
 
         pathList = []
@@ -138,7 +157,16 @@ class State:
             current = current.prevState
 
         pathList.reverse()
-        return pathList
+
+        retStr = ""
+        for state in pathList:
+            retStr += state.prevPrintData + "\n"
+
+        retDict = dict()
+        retDict['outputString'] = retStr.strip()
+        retDict['stateList'] = pathList
+
+        return retDict
 
 
     def addTrueSentence(self, trueSentence):
@@ -189,14 +217,14 @@ class State:
         return True
 
 
-    def isGoalState(state, goalState):
+    def isGoalState(self, goalState):
         """
         Checks if `state` is a goal state by comparing
         it to `goalState`. Returns `True` if it is, and `False` otherwise.
         Essentially compares two states.
         """
 
-        return goalState == state
+        return goalState == self
 
 
     def __eq__(self, other):
@@ -224,7 +252,7 @@ class State:
         for trueSentence in self.trueSentenceList:
             retStr += str(trueSentence) + " \n"
 
-        retStr += "Previous Action : " + str(self.prevAction)
+        retStr += "Previous Action : " + self.prevPrintData  + "\n" + str(self.prevAction)
         return retStr
 
 
@@ -314,7 +342,7 @@ class Action:
     manages all aspects of actions.
     """
 
-    def __init__(self, name, preconditionList, effectList):
+    def __init__(self, name, argList, preconditionList, effectList):
         """
         Initializes an Action object.
         """
@@ -322,6 +350,11 @@ class Action:
         self.name = name
         """
         Name of the action.
+        """
+
+        self.argList = argList
+        """
+        List of entities on which the action is applied.
         """
 
         self.preconditionList = list(preconditionList)
@@ -392,6 +425,12 @@ class Action:
                 retState.addTrueSentence(newTrueSentence)
 
         retState.prevAction = self
+        retState.prevAssignments = dict(assignments)
+        argListString = ""
+        for arg in self.argList:
+            argListString += " " + str(assignments[arg])
+
+        retState.prevPrintData = "(" + self.name + argListString + ")"
         return retState
 
 
@@ -416,7 +455,7 @@ class Action:
 
             if stateObject.hasTrueSentences(groundTermTrueSentencesList):
                 retList.append(self.getStateOnActionUtil(stateObject, assignments))
-
+           
             return retList
 
         else:
@@ -457,6 +496,7 @@ def bfs(startState, goalState, actionList):
 
     while len(bfsQueue) > 0:
         poppedState = bfsQueue.pop(0)
+        print("Searching plans of depth: " + str(poppedState.depth), end = "\r")
         if poppedState.isGoalState(goalState):
             return poppedState
 
@@ -464,6 +504,7 @@ def bfs(startState, goalState, actionList):
 
         for neighborState in neighborList:
             neighborState.prevState = poppedState
+            neighborState.depth = poppedState.depth + 1
 
         bfsQueue.extend(neighborList)
 
@@ -499,12 +540,21 @@ def cmpList(first, second):
     return True
 
 
+def printDict(currentDict):
+    """
+    Prints a dictionary properly.
+    """
+    
+    for key in currentDict.keys():
+        print(str(key) + ": " + str(currentDict[key]))
+
+
 def getActionsForBlocksWorld():
     """
     Hardcoded actions for the Blocks World.
     """
 
-    pickBlock = Action("pick", [TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
+    pickBlock = Action("pick", ["block"], [TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
                         TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
                         TrueSentence(PropositionTypes.EMPTY, [], False)], \
                         [ \
@@ -513,7 +563,7 @@ def getActionsForBlocksWorld():
                         TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], True), \
                         TrueSentence(PropositionTypes.EMPTY, [], True)])
 
-    unstackBlockAFromTopOfBlockB = Action("unstack", [ \
+    unstackBlockAFromTopOfBlockB = Action("unstack", ["blocka", "blockb"], [ \
             TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, 'blocka', False), Arg(ArgTypes.VARIABLE, 'blockb', False)], False), \
             TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False), \
                         TrueSentence(PropositionTypes.EMPTY, [], False)], \
@@ -524,7 +574,7 @@ def getActionsForBlocksWorld():
             TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blocka', False)], True), \
                         TrueSentence(PropositionTypes.EMPTY, [], True)])
 
-    releaseBlock = Action("release", [\
+    releaseBlock = Action("release", ["block"], [\
             TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block', False)], False)], \
             [ \
             TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, 'block', False)], False), \
@@ -532,7 +582,7 @@ def getActionsForBlocksWorld():
             TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'block', False)], True), \
                         TrueSentence(PropositionTypes.EMPTY, [], False)])
 
-    stackBlockAOnTopOfBlockB = Action("stack", [ \
+    stackBlockAOnTopOfBlockB = Action("stack", ["blocka", "blockb"], [ \
             TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, 'blockb', False)], False), \
             TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, 'blocka', False)], False)], \
             [ \
@@ -628,4 +678,54 @@ def readFile(fileName):
 
         retDict['goalState'] = goalState
         return retDict
+
+
+def writeFile(fileName, numActions, outputString):
+    """
+    Writes `outputString` to the given file. 
+    `fileName` pathname of the file to write to.
+    """
+    
+    f = open(fileName, "w")
+    f.write(str(numActions) + "\n")
+    f.write(outputString)
+    f.close()
+
+
+def main():
+    """
+    Take input argument (a file name), and write soduko solutions 
+    to a file.
+    """
+    
+    if len(sys.argv) < 2:
+        print("Invalid/insufficient arguments!")
+    else:
+        actionList = getActionsForBlocksWorld()
+        fileName = str(sys.argv[1])
+        readData = readFile(fileName)
+        traceData = None
+        outputString = ""
+        numActions = 0
+
+        if readData['planner'] == "f":
+            bfsData = bfs(readData['initState'], readData['goalState'], actionList)
+            traceData = bfsData.tracePath()
+            outputString = traceData['outputString']
+            numActions = len(traceData['stateList']) - 1
+        elif readData['planner'] == "a":
+            pass
+        elif readData['planner'] == "g":
+            pass
+        else:
+            print("Invalid planner choice!")
+
+        if len(outputString) > 0:
+            writeFile(fileName[:-4] + "_out.txt", numActions, outputString) 
+        else:
+            print("Error in searching for a plan: no output from planner!")
+    
+    return
+
+main()
 
