@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 import sys
+from heapq import *
 
 class ArgTypes:
     """
@@ -135,9 +136,15 @@ class State:
         Stores the string representing a combination of `self.prevAction` 
         and `self.prevAssignments`.
         """
+        
         self.depth = 0
         """
         Housekeeping variable used to print progress.
+        """
+        
+        self.heuristicValue = 0
+        """
+        Value used in A-Star search.
         """
 
 
@@ -598,6 +605,46 @@ def gsp(startState, goalState, actionList):
     pass
     
 
+def aStar(startState, goalState, actionList):
+    """
+    Performs a A-Star search on states.
+    Returns a `State` object which is equivalent
+    to the goal state (`goalState`). A plan can be
+    obtained by tracing the `prevState` pointers in states.
+    """
+
+    # pdb.set_trace()
+    aStarQueue = []
+    heappush(aStarQueue, (startState.heuristicValue + startState.depth, startState))
+
+    while len(aStarQueue) > 0:
+        # minVal = float('inf')
+        # minState = None
+        # for state in aStarQueue:
+        #     if state.depth + state.heuristicValue <= minVal:
+        #         minState = state
+        #         minVal = state.depth + state.heuristicValue
+        # poppedState = minState
+        # aStarQueue.remove(minState)
+        
+        poppedElement = heappop(aStarQueue)
+        poppedState = poppedElement[1]
+        
+        print("Searching plans of depth: " + str(poppedState.depth), end = "\r")
+        
+        if poppedState.isGoalState(goalState):
+            return poppedState
+
+        neighborList = poppedState.getNextStates(actionList)
+
+        for neighborState in neighborList:
+            neighborState.prevState = poppedState
+            neighborState.depth = poppedState.depth + 1
+            heappush(aStarQueue, (neighborState.heuristicValue + neighborState.depth, neighborState))
+
+    return None
+
+
 def bfs(startState, goalState, actionList):
     """
     Performs a breadth-first search on states.
@@ -831,7 +878,10 @@ def main():
             outputString = traceData['outputString']
             numActions = len(traceData['stateList']) - 1
         elif readData['planner'] == "a":
-            pass
+            aStarData = aStar(readData['initState'], readData['goalState'], actionList)
+            traceData = aStarData.tracePath()
+            outputString = traceData['outputString']
+            numActions = len(traceData['stateList']) - 1
         elif readData['planner'] == "g":
             gspData = gsp(readData['initState'], readData['goalState'], actionList)
         else:
