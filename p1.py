@@ -133,15 +133,15 @@ class State:
 
         self.prevPrintData = ""
         """
-        Stores the string representing a combination of `self.prevAction` 
+        Stores the string representing a combination of `self.prevAction`
         and `self.prevAssignments`.
         """
-        
+
         self.depth = 0
         """
         Housekeeping variable used to print progress.
         """
-        
+
         self.heuristicValue = 0
         """
         Value used in A-Star search.
@@ -151,7 +151,7 @@ class State:
     def tracePath(self):
         """
         Trace path from initial state to `self`.
-        Returns a dictionary with:  
+        Returns a dictionary with:
         (1) A string with actions (in order) in plan.
         (2) A list of states in the plan.
         """
@@ -224,14 +224,17 @@ class State:
         return True
 
 
-    def isGoalState(self, goalState):
+    def isGoalState(self, goalState, inHeuristicMode = False):
         """
         Checks if `state` is a goal state by comparing
         it to `goalState`. Returns `True` if it is, and `False` otherwise.
         Essentially compares two states.
         """
 
-        return goalState == self
+        if not inHeuristicMode:
+            return goalState == self
+        else:
+            return self.hasTrueSentences(goalState.trueSentenceList)
 
 
     def __eq__(self, other):
@@ -263,7 +266,26 @@ class State:
         return retStr
 
 
-    def getNextStates(self, actionList):
+    def setHeuristicValue(self, goalState, actionList):
+        """
+        Sets the heuristic value of this object.
+        """
+
+        # self.heuristicValue = bfs(self, goalState, actionList, True).depth
+        currState = State(self.trueSentenceList, self.groundTermList)
+        count = 0
+
+        while not currState.hasTrueSentences(goalState.trueSentenceList):
+            for action in actionList:
+                retList = action.getStatesOnApplication(currState, True)
+                if len(retList) > 0:
+                    currState = retList[0]
+                    count += 1
+
+        self.heuristicValue = count
+
+
+    def getNextStates(self, actionList, inHeuristicMode = False):
         """
         Applies each action in `actionList` to the `self` state
         and returns all the states generated.
@@ -272,7 +294,7 @@ class State:
         retList = []
 
         for action in actionList:
-            retList.extend(action.getStatesOnApplication(self))
+            retList.extend(action.getStatesOnApplication(self, inHeuristicMode))
 
         return retList
 
@@ -300,7 +322,7 @@ class TrueSentence:
         """
         "Adds" a negation sign before the statement.
         """
-        
+
         self.truthValue = False
         """
         Truth value of the statement for Goal Stack planner.
@@ -346,7 +368,7 @@ class TrueSentence:
 
         return resultStr
 
-    
+
     # def getRelevantAction(self):
     #     """
     #     Returns a relevant action for the goal stack planner.
@@ -402,7 +424,7 @@ class TrueSentence:
     #                     TrueSentence(PropositionTypes.EMPTY, [], False)])
     #
     #     return retVal
-    
+
 
 class Action:
     """
@@ -470,10 +492,11 @@ class Action:
         return retStr
 
 
-    def getStateOnActionUtil(self, stateObject, assignments):
+    def getStateOnActionUtil(self, stateObject, assignments, inHeuristicMode = False):
         """
         Applies `this` Action to `stateObject` with given `assignments`.
-        `assignments` Dictionary of assignments made.
+        `assignments` is the dictionary of assignments made.
+        `inHeuristicMode` is the mode identifier.
         Returns a new `State` object.
         Does not modify `stateObject`.
         """
@@ -488,7 +511,8 @@ class Action:
 
             newTrueSentence.argList = groundTermList
             if trueSentence.isNegation:
-                retState.removeTrueSentence(newTrueSentence)
+                if not inHeuristicMode:
+                    retState.removeTrueSentence(newTrueSentence)
             else:
                 retState.addTrueSentence(newTrueSentence)
 
@@ -502,7 +526,7 @@ class Action:
         return retState
 
 
-    def getStatesOnApplicationUtil(self, stateObject, unassignedVariableList, assignments, retList):
+    def getStatesOnApplicationUtil(self, stateObject, unassignedVariableList, assignments, retList, inHeuristicMode = False):
         """
         Assign groundterms to unassigned variables in `unassignedVariableList`.
         Returns a list of `State` objects possible after
@@ -514,6 +538,19 @@ class Action:
         """
 
         if len(unassignedVariableList) == 0:
+
+            effectTrueSentencesList = []
+            for trueSentence in self.effectList:
+                positiveGroundTermList = []
+                if trueSentence.isNegation:
+                    continue
+                for variable in trueSentence.argList:
+                    positiveGroundTermList.append(assignments[variable.value])
+                effectTrueSentencesList.append(TrueSentence(trueSentence.propositionType, positiveGroundTermList))
+
+            if stateObject.hasTrueSentences(effectTrueSentencesList):
+                return retList
+
             groundTermTrueSentencesList = []
             for trueSentence in self.preconditionList:
                 groundTermList = []
@@ -522,22 +559,27 @@ class Action:
                 groundTermTrueSentencesList.append(TrueSentence(trueSentence.propositionType, groundTermList))
 
             if stateObject.hasTrueSentences(groundTermTrueSentencesList):
-                retList.append(self.getStateOnActionUtil(stateObject, assignments))
-           
+                if not inHeuristicMode:
+                    retList.append(self.getStateOnActionUtil(stateObject, assignments, inHeuristicMode))
+                else:
+                    stateObject = self.getStateOnActionUtil(stateObject, assignments, inHeuristicMode)
+                    retList = [stateObject]
             return retList
 
         else:
             thisVariable = unassignedVariableList.pop()
             for groundTerm in stateObject.groundTermList:
                 assignments[thisVariable.value] = groundTerm
-                self.getStatesOnApplicationUtil(stateObject, unassignedVariableList, assignments, retList)
+                retList = self.getStatesOnApplicationUtil(stateObject, unassignedVariableList, assignments, retList, inHeuristicMode)
+                if inHeuristicMode and len(retList) > 0:
+                    stateObject = retList[0]
                 assignments.pop(thisVariable.value)
 
             unassignedVariableList.append(thisVariable)
             return retList
 
 
-    def getStatesOnApplication(self, stateObject):
+    def getStatesOnApplication(self, stateObject, inHeuristicMode = False):
         """
         Generates states after unification to input `stateObject`.
         Returns a list of `State` objects.
@@ -547,7 +589,7 @@ class Action:
 
         assignments = {}
         retList = []
-        return self.getStatesOnApplicationUtil(stateObject, self.variableTermList, assignments, retList)
+        return self.getStatesOnApplicationUtil(stateObject, self.variableTermList, assignments, retList, inHeuristicMode)
 
 
 # def gsp(startState, goalState, actionList):
@@ -601,9 +643,9 @@ def gsp(startState, goalState, actionList):
     """
     Does Goal Stack planning.
     """
-    
+
     pass
-    
+
 
 def aStar(startState, goalState, actionList):
     """
@@ -615,16 +657,17 @@ def aStar(startState, goalState, actionList):
 
     # pdb.set_trace()
     aStarQueue = []
-    
+
     # Update heuristic value
+    # startState.setHeuristicValue(goalState, actionList)
     heappush(aStarQueue, (startState.heuristicValue + startState.depth, startState))
 
     while len(aStarQueue) > 0:
         poppedElement = heappop(aStarQueue)
         poppedState = poppedElement[1]
-        
+
         print("Searching plans of depth: " + str(poppedState.depth), end = "\r")
-        
+
         if poppedState.isGoalState(goalState):
             return poppedState
 
@@ -633,14 +676,15 @@ def aStar(startState, goalState, actionList):
         for neighborState in neighborList:
             neighborState.prevState = poppedState
             neighborState.depth = poppedState.depth + 1
-            
+
             # Update heuristic value
+            neighborState.setHeuristicValue(goalState, actionList)
             heappush(aStarQueue, (neighborState.heuristicValue + neighborState.depth, neighborState))
 
     return None
 
 
-def bfs(startState, goalState, actionList):
+def bfs(startState, goalState, actionList, inHeuristicMode = False):
     """
     Performs a breadth-first search on states.
     Returns a `State` object which is equivalent
@@ -655,11 +699,11 @@ def bfs(startState, goalState, actionList):
     while len(bfsQueue) > 0:
         poppedState = bfsQueue.pop(0)
         print("Searching plans of depth: " + str(poppedState.depth), end = "\r")
-        
-        if poppedState.isGoalState(goalState):
+
+        if poppedState.isGoalState(goalState, inHeuristicMode):
             return poppedState
 
-        neighborList = poppedState.getNextStates(actionList)
+        neighborList = poppedState.getNextStates(actionList, inHeuristicMode)
 
         for neighborState in neighborList:
             neighborState.prevState = poppedState
@@ -703,7 +747,7 @@ def printDict(currentDict):
     """
     Prints a dictionary properly.
     """
-    
+
     for key in currentDict.keys():
         print(str(key) + ": " + str(currentDict[key]))
 
@@ -841,10 +885,10 @@ def readFile(fileName):
 
 def writeFile(fileName, numActions, outputString):
     """
-    Writes `outputString` to the given file. 
+    Writes `outputString` to the given file.
     `fileName` pathname of the file to write to.
     """
-    
+
     f = open(fileName, "w")
     f.write(str(numActions) + "\n")
     f.write(outputString)
@@ -853,10 +897,10 @@ def writeFile(fileName, numActions, outputString):
 
 def main():
     """
-    Take input argument (a file name), and write soduko solutions 
+    Take input argument (a file name), and write soduko solutions
     to a file.
     """
-    
+
     if len(sys.argv) < 2:
         print("Invalid/insufficient arguments!")
     else:
@@ -883,10 +927,10 @@ def main():
             print("Invalid planner choice!")
 
         if len(outputString) > 0:
-            writeFile(fileName[:-4] + "_out.txt", numActions, outputString) 
+            writeFile(fileName[:-4] + "_out.txt", numActions, outputString)
         else:
             print("Error in searching for a plan: no output from planner!")
-    
+
     return
 
 main()
