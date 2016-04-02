@@ -615,6 +615,8 @@ def aStar(startState, goalState, actionList):
 
     # pdb.set_trace()
     aStarQueue = []
+    
+    # Update heuristic value
     heappush(aStarQueue, (startState.heuristicValue + startState.depth, startState))
 
     while len(aStarQueue) > 0:
@@ -631,6 +633,8 @@ def aStar(startState, goalState, actionList):
         for neighborState in neighborList:
             neighborState.prevState = poppedState
             neighborState.depth = poppedState.depth + 1
+            
+            # Update heuristic value
             heappush(aStarQueue, (neighborState.heuristicValue + neighborState.depth, neighborState))
 
     return None
