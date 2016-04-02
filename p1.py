@@ -618,15 +618,6 @@ def aStar(startState, goalState, actionList):
     heappush(aStarQueue, (startState.heuristicValue + startState.depth, startState))
 
     while len(aStarQueue) > 0:
-        # minVal = float('inf')
-        # minState = None
-        # for state in aStarQueue:
-        #     if state.depth + state.heuristicValue <= minVal:
-        #         minState = state
-        #         minVal = state.depth + state.heuristicValue
-        # poppedState = minState
-        # aStarQueue.remove(minState)
-        
         poppedElement = heappop(aStarQueue)
         poppedState = poppedElement[1]
         
