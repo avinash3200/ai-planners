@@ -543,15 +543,15 @@ def gsp(startState, goalState, actionList):
                         stack.append([trueSentence])
         else:
             assignments = dict()
-			for argVal in poppedElement.argList:
-				assignments[argVal] = Arg(ArgTypes.TERMINAL, argVal, False)
-			
-			argListString = ""
-			for arg in poppedElement.argList:
-				argListString += " " + str(arg.value)
-			print "(" + poppedElement.name + argListString + ")"	
+            for argVal in poppedElement.argList:
+                assignments[argVal] = Arg(ArgTypes.TERMINAL, argVal, False)
             
-			tempDict = dict()
+            argListString = ""
+            for arg in poppedElement.argList:
+                argListString += " " + str(arg.value)
+            print "(" + poppedElement.name + argListString + ")"    
+            
+            tempDict = dict()
             tempDict['action'] = poppedElement
             tempDict['state'] = currentState
             tempDict['assignments'] = assignments
