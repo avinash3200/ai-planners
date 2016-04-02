@@ -339,6 +339,34 @@ class TrueSentence:
 
         return resultStr
 
+    
+    def getRelevantAction(self):
+        """
+        Returns a relevant action for the goal stack planner.
+        """
+        
+        if self.propositionType == PropositionTypes.ON:
+            retVal = Action("stack", [self.argList[0].argValue, self.argList[1].argValue], [TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.TERMINAL, self.argList[1].argValue, False)], False), \
+                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.TERMINAL, self.argList[0].argValue, False)], False)], [])
+        
+        elif self.propositionType == PropositionTypes.ONTABLE:
+            retVal = Action("release", [self.argList[0].argValue], [TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False)], False)], [])
+        
+        elif self.propositionType == PropositionTypes.CLEAR:
+            retVal = Action("unstack", [self.argList[0].argValue, self.argList[1].argValue], [ \
+                    TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False), Arg(ArgTypes.VARIABLE, self.argList[1].argValue, False)], False), \
+                    TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False)], False), \
+                    TrueSentence(PropositionTypes.EMPTY, [], False)], [])
+
+        elif self.propositionType == PropositionTypes.HOLD:
+            retVal = Action("pick", [self.argList[0].argValue], [TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False)], False), \
+                    TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False)], False), \
+                    TrueSentence(PropositionTypes.EMPTY, [], False)], [])
+
+        elif self.propositionType == PropositionTypes.EMPTY:
+            retVal = Action("release", [self.argList[0].argValue], [\
+                    TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False)], False)], [])
+
 
 class Action:
     """
@@ -493,6 +521,7 @@ def gsp(startState, goalState, actionList):
     
     stack = []
     currentState = startState
+    planList = []
 
     stack.append(goalState.trueSentenceList)
     for trueSentence in goalState.trueSentenceList:
@@ -507,12 +536,27 @@ def gsp(startState, goalState, actionList):
                     for trueSentence in poppedElement:
                         stack.append([trueSentence])
                 else:
-                    # find out a relevant action
+                    relevantAction = poppedElement.getRelevantAction()
+                    stack.append(relevantAction)
                     stack.append(relevantAction.preconditionList)
                     for trueSentence in relevantAction.preconditionList:
                         stack.append([trueSentence])
         else:
-            # add action to plan
+            assignments = dict()
+			for argVal in poppedElement.argList:
+				assignments[argVal] = Arg(ArgTypes.TERMINAL, argVal, False)
+			
+			argListString = ""
+			for arg in poppedElement.argList:
+				argListString += " " + str(arg.value)
+			print "(" + poppedElement.name + argListString + ")"	
+            
+			tempDict = dict()
+            tempDict['action'] = poppedElement
+            tempDict['state'] = currentState
+            tempDict['assignments'] = assignments
+            planList.append(tempDict)
+            currentState = poppedElement.getStateOnActionUtil(currentState, assignments)
 
     return currentState
 
