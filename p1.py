@@ -346,27 +346,55 @@ class TrueSentence:
         """
         
         if self.propositionType == PropositionTypes.ON:
-            retVal = Action("stack", [self.argList[0].argValue, self.argList[1].argValue], [TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.TERMINAL, self.argList[1].argValue, False)], False), \
-                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.TERMINAL, self.argList[0].argValue, False)], False)], [])
+            retVal = Action("stack", [self.argList[0].value, self.argList[1].value], [TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.TERMINAL, self.argList[1].value, False)], False), \
+                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.TERMINAL, self.argList[0].value, False)], False)], \
+                        [ \
+                        TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False), Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], False), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
+                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], True), \
+                        TrueSentence(PropositionTypes.EMPTY, [], False)])
         
         elif self.propositionType == PropositionTypes.ONTABLE:
-            retVal = Action("release", [self.argList[0].argValue], [TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False)], False)], [])
+            retVal = Action("release", [self.argList[0].value], [TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False)], \
+            [ \
+                        TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
+                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
+                        TrueSentence(PropositionTypes.EMPTY, [], False)])
         
         elif self.propositionType == PropositionTypes.CLEAR:
-            retVal = Action("unstack", [self.argList[0].argValue, self.argList[1].argValue], [ \
-                    TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False), Arg(ArgTypes.VARIABLE, self.argList[1].argValue, False)], False), \
-                    TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False)], False), \
-                    TrueSentence(PropositionTypes.EMPTY, [], False)], [])
+            retVal = Action("unstack", [self.argList[0].value, self.argList[1].value], [ \
+                    TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False), Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], False), \
+                    TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
+                    TrueSentence(PropositionTypes.EMPTY, [], False)], \
+                    [ \
+                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], False), \
+                        TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False), Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], True), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
+                        TrueSentence(PropositionTypes.EMPTY, [], True)])
 
         elif self.propositionType == PropositionTypes.HOLD:
-            retVal = Action("pick", [self.argList[0].argValue], [TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False)], False), \
-                    TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False)], False), \
-                    TrueSentence(PropositionTypes.EMPTY, [], False)], [])
+            retVal = Action("pick", [self.argList[0].value], [TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
+                    TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
+                    TrueSentence(PropositionTypes.EMPTY, [], False)], \
+                    [ \
+                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
+                        TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
+                        TrueSentence(PropositionTypes.EMPTY, [], True)])
 
         elif self.propositionType == PropositionTypes.EMPTY:
-            retVal = Action("release", [self.argList[0].argValue], [\
-                    TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].argValue, False)], False)], [])
-
+            retVal = Action("release", [self.argList[0].value], [\
+                    TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False)], \
+                    [ \
+                        TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
+                        TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
+                        TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
+                        TrueSentence(PropositionTypes.EMPTY, [], False)])
+        
+        return retVal
 
 class Action:
     """
@@ -526,9 +554,10 @@ def gsp(startState, goalState, actionList):
     stack.append(goalState.trueSentenceList)
     for trueSentence in goalState.trueSentenceList:
         stack.append([trueSentence])
-
-    while len(stack > 0)
+    
+    while len(stack) > 0:
         poppedElement = stack.pop(0)
+
         if type(poppedElement) is list:
             if not currentState.hasTrueSentences(poppedElement):
                 if len(poppedElement) > 1:
@@ -536,7 +565,7 @@ def gsp(startState, goalState, actionList):
                     for trueSentence in poppedElement:
                         stack.append([trueSentence])
                 else:
-                    relevantAction = poppedElement.getRelevantAction()
+                    relevantAction = poppedElement[0].getRelevantAction()
                     stack.append(relevantAction)
                     stack.append(relevantAction.preconditionList)
                     for trueSentence in relevantAction.preconditionList:
@@ -549,7 +578,7 @@ def gsp(startState, goalState, actionList):
             argListString = ""
             for arg in poppedElement.argList:
                 argListString += " " + str(arg.value)
-            print "(" + poppedElement.name + argListString + ")"    
+            print("(" + poppedElement.name + argListString + ")")
             
             tempDict = dict()
             tempDict['action'] = poppedElement
@@ -796,7 +825,7 @@ def main():
         elif readData['planner'] == "a":
             pass
         elif readData['planner'] == "g":
-            pass
+            gspData = gsp(readData['initState'], readData['goalState'], actionList)
         else:
             print("Invalid planner choice!")
 
@@ -807,5 +836,4 @@ def main():
     
     return
 
-# main()
-
+main()
