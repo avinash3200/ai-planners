@@ -318,7 +318,6 @@ class State:
 
 
 class TrueSentence:
-
     """
     This class represents a sentence whose truth value is "True".
     """
@@ -391,32 +390,23 @@ class TrueSentence:
 
         return resultStr
 
-        def getNewGoals(self, currState, actionList):
-            """
-            Returns a dictionary of data required for new goals of GSP.
-            Format of returned dictionary is :
-                `trueSentenceList` : list of new `TrueSentence` objects.
-                `action` : element of `actionList` that has to be applied.
-                `assignments` : assignments used for applying returned action.
-            `currState` is the current `State`.
-            `actionList` is the list of possible actions in given world.
-            """
-
-            retDict = {}
-
-
-
-            return retDict
-
-
-    def getRelevantAction(self):
+    def getNewGoals(self, currState, actionList):
         """
-        Returns a relevant action for the goal stack planner.
+        Returns a dictionary of data required for new goals of GSP.
+        Format of returned dictionary is :
+            `trueSentenceList` : list of new `TrueSentence` objects.
+            `action` : element of `actionList` that has to be applied.
+            `assignments` : assignments used for applying returned action.
+        `currState` is the current `State`.
+        `actionList` is the list of possible actions in given world.
         """
-        
-        pass
 
-    
+        retDict = {}
+
+
+
+        return retDict
+
 class Action:
 
     """
