@@ -399,12 +399,47 @@ class TrueSentence:
                 `assignments` : assignments used for applying returned action.
             `currState` is the current `State`.
             `actionList` is the list of possible actions in given world.
+            Returns `None` if the goal is not reachable.
             """
 
             retDict = {}
+            possibleActions = []
+            for action in actionList:
+                for trueSentence in action.effectList:
+                    if trueSentence.propositionType == self.propositionType \
+                            and self.isNegation == trueSentence.isNegation:
+                        assignments = {}
+                        for ii in len(trueSentence.argList):
+                            assignments[trueSentence.argList[ii].value] = \
+                                    self.argList[i]
+                        possibleActions.append([action, assignments])
 
+            if len(possibleActions) == 0:
+                return None
 
+            possibleActions.shuffle()
+            nextAction = possibleActions[0][0]
+            assignments = possibleActions[0][1]
+            possibleAssignments = list(currState.groundTermList)
+            retDict['action'] = nextAction
 
+            for arg in nextAction.variableTermList:
+                if not assignments.has_key(arg.value):
+                    randomIndex = random.randrange(0, len(possibleAssignments))
+                    assignments[arg.value] = possibleAssignments[randomIndex]
+
+            retDict['assignments'] = assignments
+
+            retTrueList = []
+            for trueSentence in nextAction.preconditionList:
+                assignedSentence = TrueSentence(trueSentence.propositionType, \
+                        trueSentence.argList, trueSentence.isNegation)
+                for arg in assignedSentence.argList:
+                    if arg.isVariable():
+                        arg = assignments[arg.value]
+                retTrueList.append(assignedSentence)
+
+            retDict['trueSentenceList'] = retTrueList
             return retDict
 
 
