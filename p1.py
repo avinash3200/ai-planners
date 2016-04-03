@@ -15,12 +15,12 @@ import time
 
 bfsNumNodesExpanded = 0
 """
-Keeps track of total number of nodes expanded in breadth-first search.
+This variable keeps track of total number of nodes expanded in breadth-first search.
 """
 
 aStarNumNodesExpanded = 0
 """
-Keeps track of total number of nodes expanded in A-Star search.
+This variable keeps track of total number of nodes expanded in A-Star search.
 """
 
 class ArgTypes:
@@ -118,7 +118,7 @@ class PropositionTypes:
 
 class State:
     """
-    This class represents the current state.
+    This class represents the current state.  
     This represents a conjuction of `TrueSentence` objects.
     """
 
@@ -170,9 +170,9 @@ class State:
 
     def tracePath(self):
         """
-        Trace path from initial state to `self`.
-        Returns a dictionary with:
-        (1) A string with actions (in order) in plan.
+        Trace path from initial state to `self`.  
+        Returns a dictionary with:  
+        (1) A string with actions (in order) in plan.  
         (2) A list of states in the plan.
         """
 
@@ -226,7 +226,7 @@ class State:
 
     def hasTrueSentences(self, trueSentenceList):
         """
-        Checks if all the sentences in `trueSentenceList` exist in the state.
+        Checks if all the sentences in `trueSentenceList` exist in the state.  
         If they do not, returns `False`.
         """
 
@@ -244,7 +244,7 @@ class State:
     def isGoalState(self, goalState, inHeuristicMode=False):
         """
         Checks if `state` is a goal state by comparing
-        it to `goalState`. Returns `True` if it is, and `False` otherwise.
+        it to `goalState`. Returns `True` if it is, and `False` otherwise.  
         Essentially compares two states.
         """
 
@@ -525,11 +525,11 @@ class Action:
         inHeuristicMode=False,
         ):
         """
-        Applies `this` Action to `stateObject` with given `assignments`.
-        `assignments` is the dictionary of assignments made.
-        `inHeuristicMode` is the mode identifier.
-        Returns a new `State` object.
-        Does not modify `stateObject`.
+        Applies `this` Action to `stateObject` with given `assignments`.  
+        `assignments` is the dictionary of assignments made.  
+        `inHeuristicMode` is the mode identifier.  
+        Returns a new `State` object.  
+        Does not modify `stateObject`.  
         """
 
         retState = State(stateObject.trueSentenceList,
@@ -570,13 +570,13 @@ class Action:
         inHeuristicMode=False,
         ):
         """
-        Assign groundterms to unassigned variables in `unassignedVariableList`.
+        Assigns groundterms to unassigned variables in `unassignedVariableList`.  
         Returns a list of `State` objects possible after
-        application of `this` Action to `stateObject`
-        `assignments` Dictionary of assignments already made.
-        Keys in this are `value` parameters of `Arg` objects.
-        Values in this dictionary are `Arg` objects.
-        `retList` List of `State` objects already generated.
+        application of `this` Action to `stateObject`.  
+        `assignments` is a dictionary of assignments already made.  
+        Keys in this are `value` parameters of `Arg` objects.  
+        Values in this dictionary are `Arg` objects.  
+        `retList` is a list of `State` objects already generated.
         """
 
         if len(unassignedVariableList) == 0:
@@ -630,9 +630,9 @@ class Action:
     def getStatesOnApplication(self, stateObject,
                                inHeuristicMode=False):
         """
-        Generates states after unification to input `stateObject`.
+        Generates states after unification to input `stateObject`.  
         Returns a list of `State` objects.
-        List may be empty.
+        This list may be empty.  
         The argument `stateObject` is not modified.
         """
 
@@ -700,7 +700,7 @@ def gsp(startState, goalState, actionList):
 
 def aStar(startState, goalState, actionList):
     """
-    Performs a A-Star search on states.
+    Performs a A-Star search on states.  
     Returns a `State` object which is equivalent
     to the goal state (`goalState`). A plan can be
     obtained by tracing the `prevState` pointers in states.
@@ -751,7 +751,7 @@ def bfs(
     inHeuristicMode=False,
     ):
     """
-    Performs a breadth-first search on states.
+    Performs a breadth-first search on states.  
     Returns a `State` object which is equivalent
     to the goal state (`goalState`). A plan can be
     obtained by tracing the `prevState` pointers in states.
@@ -894,9 +894,9 @@ def getActionsForBlocksWorld():
 def readFile(fileName):
     """
     Returns a dictionary with initial state, final state and
-    the "mode" of operation as read from the `fileName` file.
-    Keys in dictionary are:
-        planner, initState, goalState
+    the "mode" of operation as read from the `fileName` file.  
+    Keys in dictionary are:  
+    'planner', 'initState', 'goalState'.
     """
 
     retDict = {}
@@ -983,8 +983,8 @@ def readFile(fileName):
 
 def writeFile(fileName, numActions, outputString):
     """
-    Writes `outputString` to the given file.
-    `fileName` pathname of the file to write to.
+    Writes `outputString` to the given file.  
+    `fileName` is the pathname of the file to write to.
     """
 
     f = open(fileName, 'w')
