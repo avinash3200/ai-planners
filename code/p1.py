@@ -1032,8 +1032,18 @@ def main():
             numActions = len(traceData['stateList']) - 1
             numNodesExpanded = aStarNumNodesExpanded
         elif readData['planner'] == 'g':
-            gspData = gsp(readData['initState'], readData['goalState'],
+            gspPlanList = gsp(readData['initState'], readData['goalState'],
                           actionList)
+            for stage in gspPlanList:
+                action = stage['action']
+                assignments = stage['assignments']
+                argListString = ''
+                for arg in action.argList:
+                    argListString += ' ' + str(assignments[arg])
+                outputString += '(' + action.name + argListString + ')' + '\n'
+            numActions = len(gspPlanList)
+            numNodesExpanded = -1
+
         else:
             print('Invalid planner choice!')
 
@@ -1051,7 +1061,10 @@ def main():
         print('Planner: ' + readData['planner'])
         print('Time: ' + str(duration))
         print('Plan length: ' + str(numActions))
-        print('Nodes expanded: ' + str(numNodesExpanded))
+        if numNodesExpanded >= 0:
+            print('Nodes expanded: ' + str(numNodesExpanded))
+        else:
+            print('Nodes expanded: ' + 'N.A.')
         print('Output written to: "' + str(fileName[:-4] + '_out.txt"'))
         print('..........................................................'
               )
