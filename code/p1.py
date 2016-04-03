@@ -10,6 +10,7 @@ from __future__ import print_function
 import sys
 from heapq import *
 import time
+import random
 
 # Globals:
 
@@ -391,62 +392,14 @@ class TrueSentence:
         return resultStr
 
 
-    # def getRelevantAction(self):
-    #     """
-    #     Returns a relevant action for the goal stack planner.
-    #     """
-    #
-    #     if self.propositionType == PropositionTypes.ON:
-    #         retVal = Action("stack", [self.argList[0].value, self.argList[1].value], [TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.TERMINAL, self.argList[1].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.TERMINAL, self.argList[0].value, False)], False)], \
-    #                     [ \
-    #                     TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False), Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.EMPTY, [], False)])
-    #
-    #     elif self.propositionType == PropositionTypes.ONTABLE:
-    #         retVal = Action("release", [self.argList[0].value], [TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False)], \
-    #         [ \
-    #                     TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.EMPTY, [], False)])
-    #
-    #     elif self.propositionType == PropositionTypes.CLEAR:
-    #         retVal = Action("unstack", [self.argList[0].value, self.argList[1].value], [ \
-    #                 TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False), Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], False), \
-    #                 TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                 TrueSentence(PropositionTypes.EMPTY, [], False)], \
-    #                 [ \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False), Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.EMPTY, [], True)])
-    #
-    #     elif self.propositionType == PropositionTypes.HOLD:
-    #         retVal = Action("pick", [self.argList[0].value], [TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                 TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                 TrueSentence(PropositionTypes.EMPTY, [], False)], \
-    #                 [ \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.EMPTY, [], True)])
-    #
-    #     elif self.propositionType == PropositionTypes.EMPTY:
-    #         retVal = Action("release", [self.argList[0].value], [\
-    #                 TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False)], \
-    #                 [ \
-    #                     TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.EMPTY, [], False)])
-    #
-    #     return retVal
+    def getRelevantAction(self):
+        """
+        Returns a relevant action for the goal stack planner.
+        """
+        
+        pass
 
+    
 class Action:
 
     """
@@ -642,61 +595,55 @@ class Action:
                 self.variableTermList, assignments, retList,
                 inHeuristicMode)
 
-
-# def gsp(startState, goalState, actionList):
-#     """
-#     Does Goal Stack planning.
-#     """
-#
-#     stack = []
-#     currentState = startState
-#     planList = []
-#
-#     stack.append(goalState.trueSentenceList)
-#     for trueSentence in goalState.trueSentenceList:
-#         stack.append([trueSentence])
-#
-#     while len(stack) > 0:
-#         poppedElement = stack.pop(0)
-#
-#         if type(poppedElement) is list:
-#             if not currentState.hasTrueSentences(poppedElement):
-#                 if len(poppedElement) > 1:
-#                     stack.append(poppedElement)
-#                     for trueSentence in poppedElement:
-#                         stack.append([trueSentence])
-#                 else:
-#                     relevantAction = poppedElement[0].getRelevantAction()
-#                     stack.append(relevantAction)
-#                     stack.append(relevantAction.preconditionList)
-#                     for trueSentence in relevantAction.preconditionList:
-#                         stack.append([trueSentence])
-#         else:
-#             assignments = dict()
-#             for argVal in poppedElement.argList:
-#                 assignments[argVal] = Arg(ArgTypes.TERMINAL, argVal, False)
-#
-#             argListString = ""
-#             for argVal in poppedElement.argList:
-#                 argListString += " " + str(argVal)
-#             print("(" + poppedElement.name + argListString + ")")
-#
-#             tempDict = dict()
-#             tempDict['action'] = poppedElement
-#             tempDict['state'] = currentState
-#             tempDict['assignments'] = assignments
-#             planList.append(tempDict)
-#             currentState = poppedElement.getStateOnActionUtil(currentState, assignments)
-#
-#     return currentState
-
 def gsp(startState, goalState, actionList):
     """
     Does Goal Stack planning.
     """
 
-    pass
+    stack = []
+    currentState = startState
+    planList = []
 
+    stack.append(goalState.trueSentenceList)
+    for trueSentence in goalState.trueSentenceList:
+        stack.append([trueSentence])
+
+    while len(stack) > 0:
+        poppedElement = stack.pop(0)
+
+        if type(poppedElement) is list:
+            if not currentState.hasTrueSentences(poppedElement):
+                if len(poppedElement) > 1:
+                    stack.append(poppedElement)
+                    random.shuffle(poppedList)
+                    for trueSentence in poppedElement:
+                        stack.append([trueSentence])
+                else:
+
+                    # TODO here
+                    relevantActionData = poppedElement[0].getRelevantAction()
+                    stack.append(relevantAction)
+                    stack.append(relevantAction.preconditionList)
+                    for trueSentence in relevantAction.preconditionList:
+                        stack.append([trueSentence])
+        else:
+            assignments = dict()
+            for argVal in poppedElement.argList:
+                assignments[argVal] = Arg(ArgTypes.TERMINAL, argVal, False)
+
+            argListString = ""
+            for argVal in poppedElement.argList:
+                argListString += " " + str(argVal)
+            print("(" + poppedElement.name + argListString + ")")
+
+            tempDict = dict()
+            tempDict['action'] = poppedElement
+            tempDict['state'] = currentState
+            tempDict['assignments'] = assignments
+            planList.append(tempDict)
+            currentState = poppedElement.getStateOnActionUtil(currentState, assignments)
+
+    return currentState
 
 def aStar(startState, goalState, actionList):
     """
