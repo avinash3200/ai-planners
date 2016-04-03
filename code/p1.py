@@ -409,24 +409,27 @@ class TrueSentence:
                 if trueSentence.propositionType == self.propositionType \
                         and self.isNegation == trueSentence.isNegation:
                     assignments = {}
-                    for ii in len(trueSentence.argList):
+                    possibleAssignments = list(currState.groundTermList)
+                    for ii in range(len(trueSentence.argList)):
                         assignments[trueSentence.argList[ii].value] = \
-                                self.argList[i]
-                    possibleActions.append([action, assignments])
+                                self.argList[ii]
+                        possibleAssignments.remove(self.argList[ii])
+                    possibleActions.append([action, assignments, possibleAssignments])
 
         if len(possibleActions) == 0:
             return None
 
-        possibleActions.shuffle()
+        random.shuffle(possibleActions)
         nextAction = possibleActions[0][0]
         assignments = possibleActions[0][1]
-        possibleAssignments = list(currState.groundTermList)
+        possibleAssignments = possibleActions[0][2]
         retDict['action'] = nextAction
 
         for arg in nextAction.variableTermList:
             if not assignments.has_key(arg.value):
                 randomIndex = random.randrange(0, len(possibleAssignments))
                 assignments[arg.value] = possibleAssignments[randomIndex]
+                possibleAssignments.pop(randomIndex)
 
         retDict['assignments'] = assignments
 
@@ -434,12 +437,22 @@ class TrueSentence:
         for trueSentence in nextAction.preconditionList:
             assignedSentence = TrueSentence(trueSentence.propositionType, \
                     trueSentence.argList, trueSentence.isNegation)
+            newArgList = []
             for arg in assignedSentence.argList:
                 if arg.isVariable():
-                    arg = assignments[arg.value]
+                    newArgList.append(assignments[arg.value])
+                else:
+                    newArgList.append(arg)
+            assignedSentence.argList = newArgList
             retTrueList.append(assignedSentence)
 
         retDict['trueSentenceList'] = retTrueList
+
+        # print("***new***")
+        # print("Input:")
+        # print(self)
+        # printDict(retDict)
+
         return retDict
 
 class Action:
@@ -535,8 +548,9 @@ class Action:
             groundTermList = []
             for variable in trueSentence.argList:
                 savedArg = assignments[variable.value]
-                groundTermList.append(Arg(savedArg.type,
-                        savedArg.value, savedArg.isNegation))
+                # groundTermList.append(Arg(savedArg.type,
+                        # savedArg.value, savedArg.isNegation))
+                groundTermList.append(savedArg)
 
             newTrueSentence.argList = groundTermList
             if trueSentence.isNegation:
@@ -639,13 +653,13 @@ class Action:
 
 def gsp(startState, goalState, actionList):
     """
-    Does Goal Stack planning.  
-    Returns a plan in the form of a list of dictionaries, in 
+    Does Goal Stack planning.
+    Returns a plan in the form of a list of dictionaries, in
     their logical order in the plan.
     The format of returned dictionary is:
-        (1) `action` : element of `actionList` that has to be applied.  
-        (2) `assignments` : assignments used for applying returned action.  
-    No parameters used to call this function are changed.  
+        (1) `action` : element of `actionList` that has to be applied.
+        (2) `assignments` : assignments used for applying returned action.
+    No parameters used to call this function are changed.
     This function may not terminate (semi-decidable).
     """
 
@@ -659,21 +673,24 @@ def gsp(startState, goalState, actionList):
         stack.append([trueSentence])
 
     while len(stack) > 0:
-        poppedElement = stack.pop(0)
+        # print("***new***")
+        # printList(stack)
+        # # print(len(stack))
+        poppedElement = stack.pop()
 
         if type(poppedElement) is list:
-            
+
             if not currentState.hasTrueSentences(poppedElement):
-                
+
                 if len(poppedElement) > 1:
                     stack.append(poppedElement)
-                    random.shuffle(poppedList)
+                    random.shuffle(poppedElement)
                     for trueSentence in poppedElement:
                         stack.append([trueSentence])
-                
+
                 else:
-                    newGoalsData = poppedElement[0].getNewGoals()
-                    
+                    newGoalsData = poppedElement[0].getNewGoals(currentState, actionList)
+
                     if newGoalsData == None:
                         stack = []
                         currentState = State(startState.trueSentenceList, \
@@ -683,7 +700,7 @@ def gsp(startState, goalState, actionList):
                         for trueSentence in goalState.trueSentenceList:
                             stack.append([trueSentence])
                         continue
-                    
+
                     actionDict = dict()
                     actionDict['action'] = newGoalsData['action']
                     actionDict['assignments'] = newGoalsData['assignments']
@@ -696,6 +713,7 @@ def gsp(startState, goalState, actionList):
             assignments = poppedElement['assignments']
             currentState = action.getStateOnActionUtil(currentState, assignments)
             planList.append(poppedElement)
+            # printDict(poppedElement)
 
     return planList
 
@@ -821,8 +839,32 @@ def printDict(currentDict):
     """
 
     for key in currentDict.keys():
-        print(str(key) + ': ' + str(currentDict[key]))
+        print(str(key) + ': ')
+        if type(currentDict[key]) is list:
+            printList(currentDict[key])
+        elif type(currentDict[key]) is dict:
+            printDict(currentDict[key])
+        else:
+            print(str(currentDict[key]))
 
+        print("")
+
+
+def printList(currentList):
+    """
+    Prints a list properly.
+    """
+
+    print("#####")
+    for item in currentList:
+        if type(item) is list:
+            printList(item)
+        elif type(item) is dict:
+            printDict(item)
+        else:
+            print(item, end = ", ")
+
+    print("")
 
 def getActionsForBlocksWorld():
     """
