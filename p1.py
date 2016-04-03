@@ -6,6 +6,19 @@
 from __future__ import print_function
 import sys
 from heapq import *
+import time
+
+# Globals:
+
+bfsNumNodesExpanded = 0
+"""
+Keeps track of total number of nodes expanded in breadth-first search.
+"""
+
+aStarNumNodesExpanded = 0
+"""
+Keeps track of total number of nodes expanded in A-Star search.
+"""
 
 class ArgTypes:
     """
@@ -658,6 +671,8 @@ def aStar(startState, goalState, actionList):
     """
 
     # pdb.set_trace()
+    global aStarNumNodesExpanded
+    aStarNodesExpanded = 0
     aStarQueue = []
 
     # Update heuristic value
@@ -673,6 +688,7 @@ def aStar(startState, goalState, actionList):
         if poppedState.isGoalState(goalState):
             return poppedState
 
+        aStarNumNodesExpanded += 1
         neighborList = poppedState.getNextStates(actionList)
 
         for neighborState in neighborList:
@@ -695,6 +711,8 @@ def bfs(startState, goalState, actionList, inHeuristicMode = False):
     """
 
     # pdb.set_trace()
+    global bfsNumNodesExpanded
+    bfsNumNodesExpanded = 0
     bfsQueue = []
     bfsQueue.append(startState)
 
@@ -705,6 +723,7 @@ def bfs(startState, goalState, actionList, inHeuristicMode = False):
         if poppedState.isGoalState(goalState, inHeuristicMode):
             return poppedState
 
+        bfsNumNodesExpanded += 1
         neighborList = poppedState.getNextStates(actionList, inHeuristicMode)
 
         for neighborState in neighborList:
@@ -912,27 +931,47 @@ def main():
         traceData = None
         outputString = ""
         numActions = 0
+        numNodesExpanded = 0
+        global bfsNumNodesExpanded
+        global aStarNodesExpanded
+        bfsNumNodesExpanded = 0
+        aStarNodesExpanded = 0
+
+        initTime = time.time()
 
         if readData['planner'] == "f":
             bfsData = bfs(readData['initState'], readData['goalState'], actionList)
             traceData = bfsData.tracePath()
             outputString = traceData['outputString']
             numActions = len(traceData['stateList']) - 1
+            numNodesExpanded = bfsNumNodesExpanded
         elif readData['planner'] == "a":
             aStarData = aStar(readData['initState'], readData['goalState'], actionList)
             traceData = aStarData.tracePath()
             outputString = traceData['outputString']
             numActions = len(traceData['stateList']) - 1
+            numNodesExpanded = aStarNumNodesExpanded
         elif readData['planner'] == "g":
             gspData = gsp(readData['initState'], readData['goalState'], actionList)
         else:
             print("Invalid planner choice!")
+
+        duration = time.time() - initTime
 
         if len(outputString) > 0:
             writeFile(fileName[:-4] + "_out.txt", numActions, outputString)
         else:
             print("Error in searching for a plan: no output from planner!")
 
+        print("\r..........................................................")
+        print("Planner: " + readData['planner'])
+        print("Time: " + str(duration))
+        print("Plan length: " + str(numActions))
+        print("Nodes expanded: " + str(numNodesExpanded))
+        print("Output wrotten to: " + str(fileName[:-4] + "_out.txt"))
+        print("..........................................................")
+    
     return
 
 main()
+
