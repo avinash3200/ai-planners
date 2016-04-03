@@ -392,13 +392,14 @@ class TrueSentence:
 
     def getNewGoals(self, currState, actionList):
         """
-        Returns a dictionary of data required for new goals of GSP.
-        Format of returned dictionary is :
-            `trueSentenceList` : list of new `TrueSentence` objects.
-            `action` : element of `actionList` that has to be applied.
-            `assignments` : assignments used for applying returned action.
-        `currState` is the current `State`.
-        `actionList` is the list of possible actions in given world.
+        Returns a dictionary of data required for new goals of GSP.  
+        The format of returned dictionary is:  
+            (1) `trueSentenceList` : list of new `TrueSentence` objects.  
+            (2) `action` : element of `actionList` that has to be applied.  
+            (3) `assignments` : assignments used for applying returned action.  
+              
+        `currState` is the current `State`.  
+        `actionList` is the list of possible actions in given world.  
         """
 
         retDict = {}
@@ -604,11 +605,19 @@ class Action:
 
 def gsp(startState, goalState, actionList):
     """
-    Does Goal Stack planning.
+    Does Goal Stack planning.  
+    Returns a plan in the form of a list of dictionaries, in 
+    their logical order in the plan.
+    The format of returned dictionary is:
+        (1) `action` : element of `actionList` that has to be applied.  
+        (2) `assignments` : assignments used for applying returned action.  
+    No parameters used to call this function are changed.  
+    This function may not terminate (semi-decidable).
     """
 
     stack = []
-    currentState = startState
+    currentState = State(startState.trueSentenceList, \
+                        startState.groundTermList)
     planList = []
 
     stack.append(goalState.trueSentenceList)
@@ -619,38 +628,42 @@ def gsp(startState, goalState, actionList):
         poppedElement = stack.pop(0)
 
         if type(poppedElement) is list:
+            
             if not currentState.hasTrueSentences(poppedElement):
+                
                 if len(poppedElement) > 1:
                     stack.append(poppedElement)
                     random.shuffle(poppedList)
                     for trueSentence in poppedElement:
                         stack.append([trueSentence])
+                
                 else:
-
-                    # TODO here
-                    relevantActionData = poppedElement[0].getRelevantAction()
-                    stack.append(relevantAction)
-                    stack.append(relevantAction.preconditionList)
-                    for trueSentence in relevantAction.preconditionList:
+                    newGoalsData = poppedElement[0].getNewGoals()
+                    
+                    if newGoalsData == None:
+                        stack = []
+                        currentState = State(startState.trueSentenceList, \
+                                startState.groundTermList)
+                        planList = []
+                        stack.append(goalState.trueSentenceList)
+                        for trueSentence in goalState.trueSentenceList:
+                            stack.append([trueSentence])
+                        continue
+                    
+                    actionDict = dict()
+                    actionDict['action'] = newGoalsData['action']
+                    actionDict['assignments'] = newGoalsData['assignments']
+                    stack.append(actionDict)
+                    stack.append(newGoalsData['trueSentenceList'])
+                    for trueSentence in newGoalsData['trueSentenceList']:
                         stack.append([trueSentence])
         else:
-            assignments = dict()
-            for argVal in poppedElement.argList:
-                assignments[argVal] = Arg(ArgTypes.TERMINAL, argVal, False)
+            action = poppedElement['action']
+            assignments = poppedElement['assignments']
+            currentState = action.getStateOnActionUtil(currentState, assignments)
+            planList.append(poppedElement)
 
-            argListString = ""
-            for argVal in poppedElement.argList:
-                argListString += " " + str(argVal)
-            print("(" + poppedElement.name + argListString + ")")
-
-            tempDict = dict()
-            tempDict['action'] = poppedElement
-            tempDict['state'] = currentState
-            tempDict['assignments'] = assignments
-            planList.append(tempDict)
-            currentState = poppedElement.getStateOnActionUtil(currentState, assignments)
-
-    return currentState
+    return planList
 
 def aStar(startState, goalState, actionList):
     """
