@@ -968,7 +968,7 @@ def main():
         print("Time: " + str(duration))
         print("Plan length: " + str(numActions))
         print("Nodes expanded: " + str(numNodesExpanded))
-        print("Output wrotten to: " + str(fileName[:-4] + "_out.txt"))
+        print("Output written to: " + str(fileName[:-4] + "_out.txt"))
         print("..........................................................")
     
     return
