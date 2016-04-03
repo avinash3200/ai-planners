@@ -282,7 +282,7 @@ class State:
                     currState = retList[0]
                     count += 1
 
-        self.heuristicValue = count
+        self.heuristicValue = currState.heuristicValue
 
 
     def getNextStates(self, actionList, inHeuristicMode = False):
@@ -523,6 +523,8 @@ class Action:
             argListString += " " + str(assignments[arg])
 
         retState.prevPrintData = "(" + self.name + argListString + ")"
+        if inHeuristicMode:
+            retState.heuristicValue = stateObject.heuristicValue + 1
         return retState
 
 
