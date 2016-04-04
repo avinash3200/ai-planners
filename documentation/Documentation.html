@@ -1369,12 +1369,15 @@ class State:
         currState = State(self.trueSentenceList, self.groundTermList)
         count = 0
 
-        while not currState.hasTrueSentences(goalState.trueSentenceList):
+        while True:
             for action in actionList:
                 retList = action.getStatesOnApplication(currState, True)
                 if len(retList) > 0:
                     currState = retList[0]
                 count += 1
+                if currState.hasTrueSentences(goalState.trueSentenceList):
+                    self.heuristicValue = count
+                    return
 
         # self.heuristicValue = currState.heuristicValue
         self.heuristicValue = count
@@ -1589,12 +1592,12 @@ class TrueSentence:
 
         retDict['trueSentenceList'] = retTrueList
 
-        print("***new***")
-        print("State:")
-        print(currState)
-        print("Input:")
-        print(self)
-        printDict(retDict)
+        # print("***new***")
+#         print("State:")
+#         print(currState)
+#         print("Input:")
+#         print(self)
+#         printDict(retDict)
 
         return retDict
 
@@ -4067,12 +4070,15 @@ This represents a conjuction of <code>TrueSentence</code> objects.</p></div>
         currState = State(self.trueSentenceList, self.groundTermList)
         count = 0
 
-        while not currState.hasTrueSentences(goalState.trueSentenceList):
+        while True:
             for action in actionList:
                 retList = action.getStatesOnApplication(currState, True)
                 if len(retList) > 0:
                     currState = retList[0]
                 count += 1
+                if currState.hasTrueSentences(goalState.trueSentenceList):
+                    self.heuristicValue = count
+                    return
 
         # self.heuristicValue = currState.heuristicValue
         self.heuristicValue = count
@@ -4334,12 +4340,15 @@ Essentially compares two states.</p></div>
     # self.heuristicValue = bfs(self, goalState, actionList, True).depth
     currState = State(self.trueSentenceList, self.groundTermList)
     count = 0
-    while not currState.hasTrueSentences(goalState.trueSentenceList):
+    while True:
         for action in actionList:
             retList = action.getStatesOnApplication(currState, True)
             if len(retList) > 0:
                 currState = retList[0]
             count += 1
+            if currState.hasTrueSentences(goalState.trueSentenceList):
+                self.heuristicValue = count
+                return
     # self.heuristicValue = currState.heuristicValue
     self.heuristicValue = count
 </code></pre>
@@ -4686,12 +4695,12 @@ and <code>self.prevAssignments</code>.</p></div>
 
         retDict['trueSentenceList'] = retTrueList
 
-        print("***new***")
-        print("State:")
-        print(currState)
-        print("Input:")
-        print(self)
-        printDict(retDict)
+        # print("***new***")
+#         print("State:")
+#         print(currState)
+#         print("Input:")
+#         print(self)
+#         printDict(retDict)
 
         return retDict
 </code></pre>
@@ -4878,12 +4887,12 @@ Returns <code>None</code> if the goal is not reachable.</p></div>
         assignedSentence.argList = newArgList
         retTrueList.append(assignedSentence)
     retDict['trueSentenceList'] = retTrueList
-    print("***new***")
-    print("State:")
-    print(currState)
-    print("Input:")
-    print(self)
-    printDict(retDict)
+    # print("***new***")
+      print("State:")
+      print(currState)
+      print("Input:")
+      print(self)
+      printDict(retDict)
     return retDict
 </code></pre>
   </div>
