@@ -1136,4 +1136,14 @@ def main():
     return
 
 
+def checkPlan(plan, startState, goalState):
+    """
+    Check the validity of a plan `plan` 
+    given `startState` and `goalState`.
+    """
+    
+    # TODO: implementation
+
+    pass
+
 main()
