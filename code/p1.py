@@ -259,7 +259,7 @@ class State:
         Checks equality of one `State` object with another.
         """
 
-        return cmpList(self.trueSentenceList, other.trueSentenceList)
+        return cmpListNoOrder(self.trueSentenceList, other.trueSentenceList)
 
     def __ne__(self, other):
         """
@@ -359,7 +359,7 @@ class TrueSentence:
 
         return self.propositionType == other.propositionType \
             and self.isNegation == other.isNegation \
-            and cmpList(self.argList, other.argList)
+            and cmpListWithOrder(self.argList, other.argList)
 
     def __ne__(self, other):
         """
@@ -874,7 +874,7 @@ def bfs(
 def cmpListWithOrder(first, second):
     """
     "Deep" compares two lists. Returns `True` of they are equal, and
-    `False` otherwise.  
+    `False` otherwise.
     Order of elements in the lists matters.
     """
 
@@ -883,7 +883,7 @@ def cmpListWithOrder(first, second):
 
     dupFirst = list(first)
     dupSecond = list(second)
-    
+
     for ii, item in enumerate(dupFirst):
         if item != dupSecond[ii]:
             return False
@@ -894,7 +894,7 @@ def cmpListWithOrder(first, second):
 def cmpListNoOrder(first, second):
     """
     "Deep" compares two lists. Returns `True` of they are equal, and
-    `False` otherwise.  
+    `False` otherwise.
     Order of elements in the lists does not matter.
     """
 
