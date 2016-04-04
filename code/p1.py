@@ -293,12 +293,15 @@ class State:
         currState = State(self.trueSentenceList, self.groundTermList)
         count = 0
 
-        while not currState.hasTrueSentences(goalState.trueSentenceList):
+        while True:
             for action in actionList:
                 retList = action.getStatesOnApplication(currState, True)
                 if len(retList) > 0:
                     currState = retList[0]
                 count += 1
+                if currState.hasTrueSentences(goalState.trueSentenceList):
+                    self.heuristicValue = count
+                    return
 
         # self.heuristicValue = currState.heuristicValue
         self.heuristicValue = count
