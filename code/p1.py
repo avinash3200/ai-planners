@@ -513,12 +513,12 @@ class TrueSentence:
 
         retDict['trueSentenceList'] = retTrueList
 
-        print("***new***")
-        print("State:")
-        print(currState)
-        print("Input:")
-        print(self)
-        printDict(retDict)
+        # print("***new***")
+#         print("State:")
+#         print(currState)
+#         print("Input:")
+#         print(self)
+#         printDict(retDict)
 
         return retDict
 
