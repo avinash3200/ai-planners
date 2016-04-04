@@ -733,6 +733,7 @@ def gsp(startState, goalState, actionList):
     currentState = State(startState.trueSentenceList, \
                         startState.groundTermList)
     planList = []
+    nBlocks = len(currentState.groundTermList)
 
     stack.append(goalState.trueSentenceList)
     for trueSentence in goalState.trueSentenceList:
@@ -741,7 +742,7 @@ def gsp(startState, goalState, actionList):
     while len(stack) > 0:
         # print("***new***")
         # printList(stack)
-        # # print(len(stack))
+        print(str(len(planList)).zfill(3), end = "\r")
         poppedElement = stack.pop()
 
         if type(poppedElement) is list:
@@ -870,10 +871,31 @@ def bfs(
     return None
 
 
-def cmpList(first, second):
+def cmpListWithOrder(first, second):
     """
     "Deep" compares two lists. Returns `True` of they are equal, and
-    `False` otherwise.
+    `False` otherwise.  
+    Order of elements in the lists matters.
+    """
+
+    if not len(first) == len(second):
+        return False
+
+    dupFirst = list(first)
+    dupSecond = list(second)
+    
+    for ii, item in enumerate(dupFirst):
+        if item != dupSecond[ii]:
+            return False
+
+    return True
+
+
+def cmpListNoOrder(first, second):
+    """
+    "Deep" compares two lists. Returns `True` of they are equal, and
+    `False` otherwise.  
+    Order of elements in the lists does not matter.
     """
 
     if not len(first) == len(second):
