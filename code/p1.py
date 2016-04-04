@@ -298,9 +298,10 @@ class State:
                 retList = action.getStatesOnApplication(currState, True)
                 if len(retList) > 0:
                     currState = retList[0]
-                    count += 1
+                count += 1
 
-        self.heuristicValue = currState.heuristicValue
+        # self.heuristicValue = currState.heuristicValue
+        self.heuristicValue = count
 
     def getNextStates(self, actionList, inHeuristicMode=False):
         """
@@ -687,8 +688,8 @@ class Action:
                             assignments, inHeuristicMode)
                     retList = [stateObject]
             return retList
-        else:
 
+        else:
             thisVariable = unassignedVariableList.pop()
             for groundTerm in stateObject.groundTermList:
                 assignments[thisVariable.value] = groundTerm
@@ -1204,10 +1205,10 @@ def main():
 
 def checkPlan(plan, startState, goalState):
     """
-    Check the validity of a plan `plan` 
+    Check the validity of a plan `plan`
     given `startState` and `goalState`.
     """
-    
+
     # TODO: implementation
 
     pass
