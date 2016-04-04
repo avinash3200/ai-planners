@@ -983,11 +983,14 @@ table {
   <ul>
     <li class="mono"><a href="#p1.aStar">aStar</a></li>
     <li class="mono"><a href="#p1.bfs">bfs</a></li>
-    <li class="mono"><a href="#p1.cmpList">cmpList</a></li>
+    <li class="mono"><a href="#p1.checkPlan">checkPlan</a></li>
+    <li class="mono"><a href="#p1.cmpListNoOrder">cmpListNoOrder</a></li>
+    <li class="mono"><a href="#p1.cmpListWithOrder">cmpListWithOrder</a></li>
     <li class="mono"><a href="#p1.getActionsForBlocksWorld">getActionsForBlocksWorld</a></li>
     <li class="mono"><a href="#p1.gsp">gsp</a></li>
     <li class="mono"><a href="#p1.main">main</a></li>
     <li class="mono"><a href="#p1.printDict">printDict</a></li>
+    <li class="mono"><a href="#p1.printList">printList</a></li>
     <li class="mono"><a href="#p1.readFile">readFile</a></li>
     <li class="mono"><a href="#p1.writeFile">writeFile</a></li>
   </ul>
@@ -1048,6 +1051,7 @@ table {
           
   <ul>
     <li class="mono"><a href="#p1.TrueSentence.__init__">__init__</a></li>
+    <li class="mono"><a href="#p1.TrueSentence.getNewGoals">getNewGoals</a></li>
   </ul>
 
         </li>
@@ -1082,6 +1086,7 @@ from __future__ import print_function
 import sys
 from heapq import *
 import time
+import random
 
 # Globals:
 
@@ -1190,7 +1195,7 @@ class PropositionTypes:
 
 class State:
     """
-    This class represents the current state.  
+    This class represents the current state.
     This represents a conjuction of `TrueSentence` objects.
     """
 
@@ -1242,9 +1247,9 @@ class State:
 
     def tracePath(self):
         """
-        Trace path from initial state to `self`.  
-        Returns a dictionary with:  
-        (1) A string with actions (in order) in plan.  
+        Trace path from initial state to `self`.
+        Returns a dictionary with:
+        (1) A string with actions (in order) in plan.
         (2) A list of states in the plan.
         """
 
@@ -1298,7 +1303,7 @@ class State:
 
     def hasTrueSentences(self, trueSentenceList):
         """
-        Checks if all the sentences in `trueSentenceList` exist in the state.  
+        Checks if all the sentences in `trueSentenceList` exist in the state.
         If they do not, returns `False`.
         """
 
@@ -1316,7 +1321,7 @@ class State:
     def isGoalState(self, goalState, inHeuristicMode=False):
         """
         Checks if `state` is a goal state by comparing
-        it to `goalState`. Returns `True` if it is, and `False` otherwise.  
+        it to `goalState`. Returns `True` if it is, and `False` otherwise.
         Essentially compares two states.
         """
 
@@ -1330,7 +1335,7 @@ class State:
         Checks equality of one `State` object with another.
         """
 
-        return cmpList(self.trueSentenceList, other.trueSentenceList)
+        return cmpListNoOrder(self.trueSentenceList, other.trueSentenceList)
 
     def __ne__(self, other):
         """
@@ -1369,9 +1374,10 @@ class State:
                 retList = action.getStatesOnApplication(currState, True)
                 if len(retList) > 0:
                     currState = retList[0]
-                    count += 1
+                count += 1
 
-        self.heuristicValue = currState.heuristicValue
+        # self.heuristicValue = currState.heuristicValue
+        self.heuristicValue = count
 
     def getNextStates(self, actionList, inHeuristicMode=False):
         """
@@ -1389,7 +1395,6 @@ class State:
 
 
 class TrueSentence:
-
     """
     This class represents a sentence whose truth value is "True".
     """
@@ -1431,7 +1436,7 @@ class TrueSentence:
 
         return self.propositionType == other.propositionType \
             and self.isNegation == other.isNegation \
-            and cmpList(self.argList, other.argList)
+            and cmpListWithOrder(self.argList, other.argList)
 
     def __ne__(self, other):
         """
@@ -1462,62 +1467,136 @@ class TrueSentence:
 
         return resultStr
 
+    def getNewGoals(self, currState, actionList):
+        """
+        Returns a dictionary of data required for new goals of GSP.
+        Format of returned dictionary is :
+            `trueSentenceList` : list of new `TrueSentence` objects.
+            `action` : element of `actionList` that has to be applied.
+            `assignments` : assignments used for applying returned action.
+        `currState` is the current `State`.
+        `actionList` is the list of possible actions in given world.
+        Returns `None` if the goal is not reachable.
+        """
 
-    # def getRelevantAction(self):
-    #     """
-    #     Returns a relevant action for the goal stack planner.
-    #     """
-    #
-    #     if self.propositionType == PropositionTypes.ON:
-    #         retVal = Action("stack", [self.argList[0].value, self.argList[1].value], [TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.TERMINAL, self.argList[1].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.TERMINAL, self.argList[0].value, False)], False)], \
-    #                     [ \
-    #                     TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False), Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.EMPTY, [], False)])
-    #
-    #     elif self.propositionType == PropositionTypes.ONTABLE:
-    #         retVal = Action("release", [self.argList[0].value], [TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False)], \
-    #         [ \
-    #                     TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.EMPTY, [], False)])
-    #
-    #     elif self.propositionType == PropositionTypes.CLEAR:
-    #         retVal = Action("unstack", [self.argList[0].value, self.argList[1].value], [ \
-    #                 TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False), Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], False), \
-    #                 TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                 TrueSentence(PropositionTypes.EMPTY, [], False)], \
-    #                 [ \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.ON, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False), Arg(ArgTypes.VARIABLE, self.argList[1].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.EMPTY, [], True)])
-    #
-    #     elif self.propositionType == PropositionTypes.HOLD:
-    #         retVal = Action("pick", [self.argList[0].value], [TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                 TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                 TrueSentence(PropositionTypes.EMPTY, [], False)], \
-    #                 [ \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.EMPTY, [], True)])
-    #
-    #     elif self.propositionType == PropositionTypes.EMPTY:
-    #         retVal = Action("release", [self.argList[0].value], [\
-    #                 TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False)], \
-    #                 [ \
-    #                     TrueSentence(PropositionTypes.ONTABLE, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.CLEAR, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], False), \
-    #                     TrueSentence(PropositionTypes.HOLD, [Arg(ArgTypes.VARIABLE, self.argList[0].value, False)], True), \
-    #                     TrueSentence(PropositionTypes.EMPTY, [], False)])
-    #
-    #     return retVal
+        pickAction = actionList[0]
+        unstackAction = actionList[1]
+        releaseAction = actionList[2]
+        stackAction = actionList[3]
+
+        retDict = {}
+        possibleActions = []
+        assignments = {}
+
+        possibleAssignments = list(currState.groundTermList)
+        if self.propositionType == PropositionTypes.ON:
+            nextAction = stackAction
+        elif self.propositionType == PropositionTypes.ONTABLE:
+            nextAction = releaseAction
+        elif self.propositionType == PropositionTypes.EMPTY:
+            nextAction = releaseAction
+        elif self.propositionType == PropositionTypes.HOLD:
+            checkSentence = TrueSentence(PropositionTypes.ONTABLE, self.argList, False)
+            if currState.hasTrueSentences([checkSentence]):
+                nextAction = pickAction
+            else:
+                nextAction = unstackAction
+        elif self.propositionType == PropositionTypes.CLEAR:
+            checkSentence = TrueSentence(PropositionTypes.HOLD, self.argList, False)
+            if currState.hasTrueSentences([checkSentence]):
+                nextAction = releaseAction
+            else:
+                nextAction = unstackAction
+        else:
+            return None
+
+        for trueSentence in nextAction.effectList:
+            if trueSentence.propositionType == self.propositionType \
+                    and self.isNegation == trueSentence.isNegation:
+                for ii in range(len(self.argList)):
+                    assignments[trueSentence.argList[ii].value] = \
+                            self.argList[ii]
+                if nextAction == unstackAction:
+                    if self.propositionType == PropositionTypes.HOLD:
+                        for terminal in possibleAssignments:
+                            checkSentence = TrueSentence(PropositionTypes.ON, \
+                                    [self.argList[0], terminal], False)
+                            if currState.hasTrueSentences([checkSentence]):
+                                possibleAssignments = [terminal]
+                                break
+                    elif self.propositionType == PropositionTypes.CLEAR:
+                        for terminal in possibleAssignments:
+                            checkSentence = TrueSentence(PropositionTypes.ON, \
+                                    [terminal, self.argList[0]], False)
+                            if currState.hasTrueSentences([checkSentence]):
+                                possibleAssignments = [terminal]
+                                break
+                    else:
+                        return None
+                elif self.propositionType == PropositionTypes.EMPTY:
+                    for terminal in possibleAssignments:
+                            checkSentence = TrueSentence(PropositionTypes.HOLD, \
+                                    [terminal], False)
+                            if currState.hasTrueSentences([checkSentence]):
+                                possibleAssignments = [terminal]
+                                break
+
+                break
+
+
+#             for trueSentence in action.effectList:
+#                 if trueSentence.propositionType == self.propositionType \
+#                         and self.isNegation == trueSentence.isNegation:
+#                     assignments = {}
+#                     possibleAssignments = list(currState.groundTermList)
+#                     for ii in range(len(trueSentence.argList)):
+#                         assignments[trueSentence.argList[ii].value] = \
+#                                 self.argList[ii]
+#                         possibleAssignments.remove(self.argList[ii])
+#                     possibleActions.append([action, assignments, possibleAssignments])
+
+#         if len(possibleActions) == 0:
+#             return None
+
+#         random.shuffle(possibleActions)
+#         nextAction = possibleActions[0][0]
+#         assignments = possibleActions[0][1]
+#         possibleAssignments = possibleActions[0][2]
+        retDict['action'] = nextAction
+
+        for arg in nextAction.variableTermList:
+            if not assignments.has_key(arg.value):
+                if len(possibleAssignments) == 0:
+                    break
+                randomIndex = random.randrange(0, len(possibleAssignments))
+                assignments[arg.value] = possibleAssignments[randomIndex]
+                possibleAssignments.pop(randomIndex)
+
+        retDict['assignments'] = assignments
+
+        retTrueList = []
+        for trueSentence in nextAction.preconditionList:
+            assignedSentence = TrueSentence(trueSentence.propositionType, \
+                    trueSentence.argList, trueSentence.isNegation)
+            newArgList = []
+            for arg in assignedSentence.argList:
+                if arg.isVariable():
+                    newArgList.append(assignments[arg.value])
+                else:
+                    newArgList.append(arg)
+            assignedSentence.argList = newArgList
+            retTrueList.append(assignedSentence)
+
+        retDict['trueSentenceList'] = retTrueList
+
+        print("***new***")
+        print("State:")
+        print(currState)
+        print("Input:")
+        print(self)
+        printDict(retDict)
+
+        return retDict
 
 class Action:
 
@@ -1597,11 +1676,11 @@ class Action:
         inHeuristicMode=False,
         ):
         """
-        Applies `this` Action to `stateObject` with given `assignments`.  
-        `assignments` is the dictionary of assignments made.  
-        `inHeuristicMode` is the mode identifier.  
-        Returns a new `State` object.  
-        Does not modify `stateObject`.  
+        Applies `this` Action to `stateObject` with given `assignments`.
+        `assignments` is the dictionary of assignments made.
+        `inHeuristicMode` is the mode identifier.
+        Returns a new `State` object.
+        Does not modify `stateObject`.
         """
 
         retState = State(stateObject.trueSentenceList,
@@ -1612,8 +1691,9 @@ class Action:
             groundTermList = []
             for variable in trueSentence.argList:
                 savedArg = assignments[variable.value]
-                groundTermList.append(Arg(savedArg.type,
-                        savedArg.value, savedArg.isNegation))
+                # groundTermList.append(Arg(savedArg.type,
+                        # savedArg.value, savedArg.isNegation))
+                groundTermList.append(savedArg)
 
             newTrueSentence.argList = groundTermList
             if trueSentence.isNegation:
@@ -1642,12 +1722,12 @@ class Action:
         inHeuristicMode=False,
         ):
         """
-        Assigns groundterms to unassigned variables in `unassignedVariableList`.  
+        Assigns groundterms to unassigned variables in `unassignedVariableList`.
         Returns a list of `State` objects possible after
-        application of `this` Action to `stateObject`.  
-        `assignments` is a dictionary of assignments already made.  
-        Keys in this are `value` parameters of `Arg` objects.  
-        Values in this dictionary are `Arg` objects.  
+        application of `this` Action to `stateObject`.
+        `assignments` is a dictionary of assignments already made.
+        Keys in this are `value` parameters of `Arg` objects.
+        Values in this dictionary are `Arg` objects.
         `retList` is a list of `State` objects already generated.
         """
 
@@ -1684,8 +1764,8 @@ class Action:
                             assignments, inHeuristicMode)
                     retList = [stateObject]
             return retList
-        else:
 
+        else:
             thisVariable = unassignedVariableList.pop()
             for groundTerm in stateObject.groundTermList:
                 assignments[thisVariable.value] = groundTerm
@@ -1702,9 +1782,9 @@ class Action:
     def getStatesOnApplication(self, stateObject,
                                inHeuristicMode=False):
         """
-        Generates states after unification to input `stateObject`.  
+        Generates states after unification to input `stateObject`.
         Returns a list of `State` objects.
-        This list may be empty.  
+        This list may be empty.
         The argument `stateObject` is not modified.
         """
 
@@ -1714,65 +1794,76 @@ class Action:
                 self.variableTermList, assignments, retList,
                 inHeuristicMode)
 
-
-# def gsp(startState, goalState, actionList):
-#     """
-#     Does Goal Stack planning.
-#     """
-#
-#     stack = []
-#     currentState = startState
-#     planList = []
-#
-#     stack.append(goalState.trueSentenceList)
-#     for trueSentence in goalState.trueSentenceList:
-#         stack.append([trueSentence])
-#
-#     while len(stack) > 0:
-#         poppedElement = stack.pop(0)
-#
-#         if type(poppedElement) is list:
-#             if not currentState.hasTrueSentences(poppedElement):
-#                 if len(poppedElement) > 1:
-#                     stack.append(poppedElement)
-#                     for trueSentence in poppedElement:
-#                         stack.append([trueSentence])
-#                 else:
-#                     relevantAction = poppedElement[0].getRelevantAction()
-#                     stack.append(relevantAction)
-#                     stack.append(relevantAction.preconditionList)
-#                     for trueSentence in relevantAction.preconditionList:
-#                         stack.append([trueSentence])
-#         else:
-#             assignments = dict()
-#             for argVal in poppedElement.argList:
-#                 assignments[argVal] = Arg(ArgTypes.TERMINAL, argVal, False)
-#
-#             argListString = ""
-#             for argVal in poppedElement.argList:
-#                 argListString += " " + str(argVal)
-#             print("(" + poppedElement.name + argListString + ")")
-#
-#             tempDict = dict()
-#             tempDict['action'] = poppedElement
-#             tempDict['state'] = currentState
-#             tempDict['assignments'] = assignments
-#             planList.append(tempDict)
-#             currentState = poppedElement.getStateOnActionUtil(currentState, assignments)
-#
-#     return currentState
-
 def gsp(startState, goalState, actionList):
     """
     Does Goal Stack planning.
+    Returns a plan in the form of a list of dictionaries, in
+    their logical order in the plan.
+    The format of returned dictionary is:
+        (1) `action` : element of `actionList` that has to be applied.
+        (2) `assignments` : assignments used for applying returned action.
+    No parameters used to call this function are changed.
+    This function may not terminate (semi-decidable).
     """
 
-    pass
+    stack = []
+    currentState = State(startState.trueSentenceList, \
+                        startState.groundTermList)
+    planList = []
+    nBlocks = len(currentState.groundTermList)
 
+    stack.append(goalState.trueSentenceList)
+    for trueSentence in goalState.trueSentenceList:
+        stack.append([trueSentence])
+
+    while len(stack) > 0:
+        # print("***new***")
+        # printList(stack)
+        print(str(len(planList)).zfill(3), end = "\r")
+        poppedElement = stack.pop()
+
+        if type(poppedElement) is list:
+
+            if not currentState.hasTrueSentences(poppedElement):
+
+                if len(poppedElement) > 1:
+                    stack.append(poppedElement)
+                    random.shuffle(poppedElement)
+                    for trueSentence in poppedElement:
+                        stack.append([trueSentence])
+
+                else:
+                    newGoalsData = poppedElement[0].getNewGoals(currentState, actionList)
+
+                    if newGoalsData == None:
+                        stack = []
+                        currentState = State(startState.trueSentenceList, \
+                                startState.groundTermList)
+                        planList = []
+                        stack.append(goalState.trueSentenceList)
+                        for trueSentence in goalState.trueSentenceList:
+                            stack.append([trueSentence])
+                        continue
+
+                    actionDict = dict()
+                    actionDict['action'] = newGoalsData['action']
+                    actionDict['assignments'] = newGoalsData['assignments']
+                    stack.append(actionDict)
+                    stack.append(newGoalsData['trueSentenceList'])
+                    for trueSentence in newGoalsData['trueSentenceList']:
+                        stack.append([trueSentence])
+        else:
+            action = poppedElement['action']
+            assignments = poppedElement['assignments']
+            currentState = action.getStateOnActionUtil(currentState, assignments)
+            planList.append(poppedElement)
+            # printDict(poppedElement)
+
+    return planList
 
 def aStar(startState, goalState, actionList):
     """
-    Performs a A-Star search on states.  
+    Performs a A-Star search on states.
     Returns a `State` object which is equivalent
     to the goal state (`goalState`). A plan can be
     obtained by tracing the `prevState` pointers in states.
@@ -1823,7 +1914,7 @@ def bfs(
     inHeuristicMode=False,
     ):
     """
-    Performs a breadth-first search on states.  
+    Performs a breadth-first search on states.
     Returns a `State` object which is equivalent
     to the goal state (`goalState`). A plan can be
     obtained by tracing the `prevState` pointers in states.
@@ -1857,10 +1948,31 @@ def bfs(
     return None
 
 
-def cmpList(first, second):
+def cmpListWithOrder(first, second):
     """
     "Deep" compares two lists. Returns `True` of they are equal, and
     `False` otherwise.
+    Order of elements in the lists matters.
+    """
+
+    if not len(first) == len(second):
+        return False
+
+    dupFirst = list(first)
+    dupSecond = list(second)
+
+    for ii, item in enumerate(dupFirst):
+        if item != dupSecond[ii]:
+            return False
+
+    return True
+
+
+def cmpListNoOrder(first, second):
+    """
+    "Deep" compares two lists. Returns `True` of they are equal, and
+    `False` otherwise.
+    Order of elements in the lists does not matter.
     """
 
     if not len(first) == len(second):
@@ -1892,8 +2004,32 @@ def printDict(currentDict):
     """
 
     for key in currentDict.keys():
-        print(str(key) + ': ' + str(currentDict[key]))
+        print(str(key) + ': ')
+        if type(currentDict[key]) is list:
+            printList(currentDict[key])
+        elif type(currentDict[key]) is dict:
+            printDict(currentDict[key])
+        else:
+            print(str(currentDict[key]))
 
+        print("")
+
+
+def printList(currentList):
+    """
+    Prints a list properly.
+    """
+
+    print("#####")
+    for item in currentList:
+        if type(item) is list:
+            printList(item)
+        elif type(item) is dict:
+            printDict(item)
+        else:
+            print(item, end = ", ")
+
+    print("")
 
 def getActionsForBlocksWorld():
     """
@@ -1966,8 +2102,8 @@ def getActionsForBlocksWorld():
 def readFile(fileName):
     """
     Returns a dictionary with initial state, final state and
-    the "mode" of operation as read from the `fileName` file.  
-    Keys in dictionary are:  
+    the "mode" of operation as read from the `fileName` file.
+    Keys in dictionary are:
     'planner', 'initState', 'goalState'.
     """
 
@@ -2055,7 +2191,7 @@ def readFile(fileName):
 
 def writeFile(fileName, numActions, outputString):
     """
-    Writes `outputString` to the given file.  
+    Writes `outputString` to the given file.
     `fileName` is the pathname of the file to write to.
     """
 
@@ -2103,8 +2239,18 @@ def main():
             numActions = len(traceData['stateList']) - 1
             numNodesExpanded = aStarNumNodesExpanded
         elif readData['planner'] == 'g':
-            gspData = gsp(readData['initState'], readData['goalState'],
+            gspPlanList = gsp(readData['initState'], readData['goalState'],
                           actionList)
+            for stage in gspPlanList:
+                action = stage['action']
+                assignments = stage['assignments']
+                argListString = ''
+                for arg in action.argList:
+                    argListString += ' ' + str(assignments[arg])
+                outputString += '(' + action.name + argListString + ')' + '\n'
+            numActions = len(gspPlanList)
+            numNodesExpanded = -1
+
         else:
             print('Invalid planner choice!')
 
@@ -2122,13 +2268,26 @@ def main():
         print('Planner: ' + readData['planner'])
         print('Time: ' + str(duration))
         print('Plan length: ' + str(numActions))
-        print('Nodes expanded: ' + str(numNodesExpanded))
+        if numNodesExpanded >= 0:
+            print('Nodes expanded: ' + str(numNodesExpanded))
+        else:
+            print('Nodes expanded: ' + 'N.A.')
         print('Output written to: "' + str(fileName[:-4] + '_out.txt"'))
         print('..........................................................'
               )
 
     return
 
+
+def checkPlan(plan, startState, goalState):
+    """
+    Check the validity of a plan `plan`
+    given `startState` and `goalState`.
+    """
+
+    # TODO: implementation
+
+    pass
 
 # main()
 </code></pre>
@@ -2167,7 +2326,7 @@ def main():
 
     
   
-    <div class="desc"><p>Performs a A-Star search on states.<br />
+    <div class="desc"><p>Performs a A-Star search on states.
 Returns a <code>State</code> object which is equivalent
 to the goal state (<code>goalState</code>). A plan can be
 obtained by tracing the <code>prevState</code> pointers in states.</p></div>
@@ -2176,7 +2335,7 @@ obtained by tracing the <code>prevState</code> pointers in states.</p></div>
   <div id="source-p1.aStar" class="source">
     <pre><code>def aStar(startState, goalState, actionList):
     """
-    Performs a A-Star search on states.  
+    Performs a A-Star search on states.
     Returns a `State` object which is equivalent
     to the goal state (`goalState`). A plan can be
     obtained by tracing the `prevState` pointers in states.
@@ -2233,7 +2392,7 @@ obtained by tracing the <code>prevState</code> pointers in states.</p></div>
 
     
   
-    <div class="desc"><p>Performs a breadth-first search on states.<br />
+    <div class="desc"><p>Performs a breadth-first search on states.
 Returns a <code>State</code> object which is equivalent
 to the goal state (<code>goalState</code>). A plan can be
 obtained by tracing the <code>prevState</code> pointers in states.</p></div>
@@ -2247,7 +2406,7 @@ obtained by tracing the <code>prevState</code> pointers in states.</p></div>
     inHeuristicMode=False,
     ):
     """
-    Performs a breadth-first search on states.  
+    Performs a breadth-first search on states.
     Returns a `State` object which is equivalent
     to the goal state (`goalState`). A plan can be
     obtained by tracing the `prevState` pointers in states.
@@ -2287,22 +2446,53 @@ obtained by tracing the <code>prevState</code> pointers in states.</p></div>
   
       
   <div class="item">
-    <div class="name def" id="p1.cmpList">
-    <p>def <span class="ident">cmpList</span>(</p><p>first, second)</p>
+    <div class="name def" id="p1.checkPlan">
+    <p>def <span class="ident">checkPlan</span>(</p><p>plan, startState, goalState)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Check the validity of a plan <code>plan</code>
+given <code>startState</code> and <code>goalState</code>.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.checkPlan', this);">Show source &equiv;</a></p>
+  <div id="source-p1.checkPlan" class="source">
+    <pre><code>def checkPlan(plan, startState, goalState):
+    """
+    Check the validity of a plan `plan`
+    given `startState` and `goalState`.
+    """
+
+    # TODO: implementation
+
+    pass
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+      
+  <div class="item">
+    <div class="name def" id="p1.cmpListNoOrder">
+    <p>def <span class="ident">cmpListNoOrder</span>(</p><p>first, second)</p>
     </div>
     
 
     
   
     <div class="desc"><p>"Deep" compares two lists. Returns <code>True</code> of they are equal, and
-<code>False</code> otherwise.</p></div>
+<code>False</code> otherwise.
+Order of elements in the lists does not matter.</p></div>
   <div class="source_cont">
-  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.cmpList', this);">Show source &equiv;</a></p>
-  <div id="source-p1.cmpList" class="source">
-    <pre><code>def cmpList(first, second):
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.cmpListNoOrder', this);">Show source &equiv;</a></p>
+  <div id="source-p1.cmpListNoOrder" class="source">
+    <pre><code>def cmpListNoOrder(first, second):
     """
     "Deep" compares two lists. Returns `True` of they are equal, and
     `False` otherwise.
+    Order of elements in the lists does not matter.
     """
 
     if not len(first) == len(second):
@@ -2324,6 +2514,45 @@ obtained by tracing the <code>prevState</code> pointers in states.</p></div>
             return False
 
         dupSecond.remove(itemInList)
+
+    return True
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+      
+  <div class="item">
+    <div class="name def" id="p1.cmpListWithOrder">
+    <p>def <span class="ident">cmpListWithOrder</span>(</p><p>first, second)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>"Deep" compares two lists. Returns <code>True</code> of they are equal, and
+<code>False</code> otherwise.
+Order of elements in the lists matters.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.cmpListWithOrder', this);">Show source &equiv;</a></p>
+  <div id="source-p1.cmpListWithOrder" class="source">
+    <pre><code>def cmpListWithOrder(first, second):
+    """
+    "Deep" compares two lists. Returns `True` of they are equal, and
+    `False` otherwise.
+    Order of elements in the lists matters.
+    """
+
+    if not len(first) == len(second):
+        return False
+
+    dupFirst = list(first)
+    dupSecond = list(second)
+
+    for ii, item in enumerate(dupFirst):
+        if item != dupSecond[ii]:
+            return False
 
     return True
 </code></pre>
@@ -2426,16 +2655,83 @@ obtained by tracing the <code>prevState</code> pointers in states.</p></div>
 
     
   
-    <div class="desc"><p>Does Goal Stack planning.</p></div>
+    <div class="desc"><p>Does Goal Stack planning.
+Returns a plan in the form of a list of dictionaries, in
+their logical order in the plan.
+The format of returned dictionary is:
+    (1) <code>action</code> : element of <code>actionList</code> that has to be applied.
+    (2) <code>assignments</code> : assignments used for applying returned action.
+No parameters used to call this function are changed.
+This function may not terminate (semi-decidable).</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.gsp', this);">Show source &equiv;</a></p>
   <div id="source-p1.gsp" class="source">
     <pre><code>def gsp(startState, goalState, actionList):
     """
     Does Goal Stack planning.
+    Returns a plan in the form of a list of dictionaries, in
+    their logical order in the plan.
+    The format of returned dictionary is:
+        (1) `action` : element of `actionList` that has to be applied.
+        (2) `assignments` : assignments used for applying returned action.
+    No parameters used to call this function are changed.
+    This function may not terminate (semi-decidable).
     """
 
-    pass
+    stack = []
+    currentState = State(startState.trueSentenceList, \
+                        startState.groundTermList)
+    planList = []
+    nBlocks = len(currentState.groundTermList)
+
+    stack.append(goalState.trueSentenceList)
+    for trueSentence in goalState.trueSentenceList:
+        stack.append([trueSentence])
+
+    while len(stack) > 0:
+        # print("***new***")
+        # printList(stack)
+        print(str(len(planList)).zfill(3), end = "\r")
+        poppedElement = stack.pop()
+
+        if type(poppedElement) is list:
+
+            if not currentState.hasTrueSentences(poppedElement):
+
+                if len(poppedElement) > 1:
+                    stack.append(poppedElement)
+                    random.shuffle(poppedElement)
+                    for trueSentence in poppedElement:
+                        stack.append([trueSentence])
+
+                else:
+                    newGoalsData = poppedElement[0].getNewGoals(currentState, actionList)
+
+                    if newGoalsData == None:
+                        stack = []
+                        currentState = State(startState.trueSentenceList, \
+                                startState.groundTermList)
+                        planList = []
+                        stack.append(goalState.trueSentenceList)
+                        for trueSentence in goalState.trueSentenceList:
+                            stack.append([trueSentence])
+                        continue
+
+                    actionDict = dict()
+                    actionDict['action'] = newGoalsData['action']
+                    actionDict['assignments'] = newGoalsData['assignments']
+                    stack.append(actionDict)
+                    stack.append(newGoalsData['trueSentenceList'])
+                    for trueSentence in newGoalsData['trueSentenceList']:
+                        stack.append([trueSentence])
+        else:
+            action = poppedElement['action']
+            assignments = poppedElement['assignments']
+            currentState = action.getStateOnActionUtil(currentState, assignments)
+            planList.append(poppedElement)
+            # printDict(poppedElement)
+
+    return planList
 </code></pre>
   </div>
 </div>
@@ -2494,8 +2790,18 @@ to a file.</p></div>
             numActions = len(traceData['stateList']) - 1
             numNodesExpanded = aStarNumNodesExpanded
         elif readData['planner'] == 'g':
-            gspData = gsp(readData['initState'], readData['goalState'],
+            gspPlanList = gsp(readData['initState'], readData['goalState'],
                           actionList)
+            for stage in gspPlanList:
+                action = stage['action']
+                assignments = stage['assignments']
+                argListString = ''
+                for arg in action.argList:
+                    argListString += ' ' + str(assignments[arg])
+                outputString += '(' + action.name + argListString + ')' + '\n'
+            numActions = len(gspPlanList)
+            numNodesExpanded = -1
+
         else:
             print('Invalid planner choice!')
 
@@ -2513,7 +2819,10 @@ to a file.</p></div>
         print('Planner: ' + readData['planner'])
         print('Time: ' + str(duration))
         print('Plan length: ' + str(numActions))
-        print('Nodes expanded: ' + str(numNodesExpanded))
+        if numNodesExpanded >= 0:
+            print('Nodes expanded: ' + str(numNodesExpanded))
+        else:
+            print('Nodes expanded: ' + 'N.A.')
         print('Output written to: "' + str(fileName[:-4] + '_out.txt"'))
         print('..........................................................'
               )
@@ -2544,7 +2853,49 @@ to a file.</p></div>
     """
 
     for key in currentDict.keys():
-        print(str(key) + ': ' + str(currentDict[key]))
+        print(str(key) + ': ')
+        if type(currentDict[key]) is list:
+            printList(currentDict[key])
+        elif type(currentDict[key]) is dict:
+            printDict(currentDict[key])
+        else:
+            print(str(currentDict[key]))
+
+        print("")
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+      
+  <div class="item">
+    <div class="name def" id="p1.printList">
+    <p>def <span class="ident">printList</span>(</p><p>currentList)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Prints a list properly.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.printList', this);">Show source &equiv;</a></p>
+  <div id="source-p1.printList" class="source">
+    <pre><code>def printList(currentList):
+    """
+    Prints a list properly.
+    """
+
+    print("#####")
+    for item in currentList:
+        if type(item) is list:
+            printList(item)
+        elif type(item) is dict:
+            printDict(item)
+        else:
+            print(item, end = ", ")
+
+    print("")
 </code></pre>
   </div>
 </div>
@@ -2561,8 +2912,8 @@ to a file.</p></div>
     
   
     <div class="desc"><p>Returns a dictionary with initial state, final state and
-the "mode" of operation as read from the <code>fileName</code> file.<br />
-Keys in dictionary are:<br />
+the "mode" of operation as read from the <code>fileName</code> file.
+Keys in dictionary are:
 'planner', 'initState', 'goalState'.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.readFile', this);">Show source &equiv;</a></p>
@@ -2570,8 +2921,8 @@ Keys in dictionary are:<br />
     <pre><code>def readFile(fileName):
     """
     Returns a dictionary with initial state, final state and
-    the "mode" of operation as read from the `fileName` file.  
-    Keys in dictionary are:  
+    the "mode" of operation as read from the `fileName` file.
+    Keys in dictionary are:
     'planner', 'initState', 'goalState'.
     """
 
@@ -2670,14 +3021,14 @@ Keys in dictionary are:<br />
 
     
   
-    <div class="desc"><p>Writes <code>outputString</code> to the given file.<br />
+    <div class="desc"><p>Writes <code>outputString</code> to the given file.
 <code>fileName</code> is the pathname of the file to write to.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.writeFile', this);">Show source &equiv;</a></p>
   <div id="source-p1.writeFile" class="source">
     <pre><code>def writeFile(fileName, numActions, outputString):
     """
-    Writes `outputString` to the given file.  
+    Writes `outputString` to the given file.
     `fileName` is the pathname of the file to write to.
     """
 
@@ -2781,11 +3132,11 @@ manages all aspects of actions.</p></div>
         inHeuristicMode=False,
         ):
         """
-        Applies `this` Action to `stateObject` with given `assignments`.  
-        `assignments` is the dictionary of assignments made.  
-        `inHeuristicMode` is the mode identifier.  
-        Returns a new `State` object.  
-        Does not modify `stateObject`.  
+        Applies `this` Action to `stateObject` with given `assignments`.
+        `assignments` is the dictionary of assignments made.
+        `inHeuristicMode` is the mode identifier.
+        Returns a new `State` object.
+        Does not modify `stateObject`.
         """
 
         retState = State(stateObject.trueSentenceList,
@@ -2796,8 +3147,9 @@ manages all aspects of actions.</p></div>
             groundTermList = []
             for variable in trueSentence.argList:
                 savedArg = assignments[variable.value]
-                groundTermList.append(Arg(savedArg.type,
-                        savedArg.value, savedArg.isNegation))
+                # groundTermList.append(Arg(savedArg.type,
+                        # savedArg.value, savedArg.isNegation))
+                groundTermList.append(savedArg)
 
             newTrueSentence.argList = groundTermList
             if trueSentence.isNegation:
@@ -2826,12 +3178,12 @@ manages all aspects of actions.</p></div>
         inHeuristicMode=False,
         ):
         """
-        Assigns groundterms to unassigned variables in `unassignedVariableList`.  
+        Assigns groundterms to unassigned variables in `unassignedVariableList`.
         Returns a list of `State` objects possible after
-        application of `this` Action to `stateObject`.  
-        `assignments` is a dictionary of assignments already made.  
-        Keys in this are `value` parameters of `Arg` objects.  
-        Values in this dictionary are `Arg` objects.  
+        application of `this` Action to `stateObject`.
+        `assignments` is a dictionary of assignments already made.
+        Keys in this are `value` parameters of `Arg` objects.
+        Values in this dictionary are `Arg` objects.
         `retList` is a list of `State` objects already generated.
         """
 
@@ -2868,8 +3220,8 @@ manages all aspects of actions.</p></div>
                             assignments, inHeuristicMode)
                     retList = [stateObject]
             return retList
-        else:
 
+        else:
             thisVariable = unassignedVariableList.pop()
             for groundTerm in stateObject.groundTermList:
                 assignments[thisVariable.value] = groundTerm
@@ -2886,9 +3238,9 @@ manages all aspects of actions.</p></div>
     def getStatesOnApplication(self, stateObject,
                                inHeuristicMode=False):
         """
-        Generates states after unification to input `stateObject`.  
+        Generates states after unification to input `stateObject`.
         Returns a list of `State` objects.
-        This list may be empty.  
+        This list may be empty.
         The argument `stateObject` is not modified.
         """
 
@@ -2976,10 +3328,10 @@ manages all aspects of actions.</p></div>
 
     
   
-    <div class="desc"><p>Applies <code>this</code> Action to <code>stateObject</code> with given <code>assignments</code>.<br />
-<code>assignments</code> is the dictionary of assignments made.<br />
-<code>inHeuristicMode</code> is the mode identifier.<br />
-Returns a new <code>State</code> object.<br />
+    <div class="desc"><p>Applies <code>this</code> Action to <code>stateObject</code> with given <code>assignments</code>.
+<code>assignments</code> is the dictionary of assignments made.
+<code>inHeuristicMode</code> is the mode identifier.
+Returns a new <code>State</code> object.
 Does not modify <code>stateObject</code>.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.Action.getStateOnActionUtil', this);">Show source &equiv;</a></p>
@@ -2991,11 +3343,11 @@ Does not modify <code>stateObject</code>.</p></div>
     inHeuristicMode=False,
     ):
     """
-    Applies `this` Action to `stateObject` with given `assignments`.  
-    `assignments` is the dictionary of assignments made.  
-    `inHeuristicMode` is the mode identifier.  
-    Returns a new `State` object.  
-    Does not modify `stateObject`.  
+    Applies `this` Action to `stateObject` with given `assignments`.
+    `assignments` is the dictionary of assignments made.
+    `inHeuristicMode` is the mode identifier.
+    Returns a new `State` object.
+    Does not modify `stateObject`.
     """
     retState = State(stateObject.trueSentenceList,
                      stateObject.groundTermList)
@@ -3005,8 +3357,9 @@ Does not modify <code>stateObject</code>.</p></div>
         groundTermList = []
         for variable in trueSentence.argList:
             savedArg = assignments[variable.value]
-            groundTermList.append(Arg(savedArg.type,
-                    savedArg.value, savedArg.isNegation))
+            # groundTermList.append(Arg(savedArg.type,
+                    # savedArg.value, savedArg.isNegation))
+            groundTermList.append(savedArg)
         newTrueSentence.argList = groundTermList
         if trueSentence.isNegation:
             if not inHeuristicMode:
@@ -3037,9 +3390,9 @@ Does not modify <code>stateObject</code>.</p></div>
 
     
   
-    <div class="desc"><p>Generates states after unification to input <code>stateObject</code>.<br />
+    <div class="desc"><p>Generates states after unification to input <code>stateObject</code>.
 Returns a list of <code>State</code> objects.
-This list may be empty.<br />
+This list may be empty.
 The argument <code>stateObject</code> is not modified.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.Action.getStatesOnApplication', this);">Show source &equiv;</a></p>
@@ -3047,9 +3400,9 @@ The argument <code>stateObject</code> is not modified.</p></div>
     <pre><code>def getStatesOnApplication(self, stateObject,
                            inHeuristicMode=False):
     """
-    Generates states after unification to input `stateObject`.  
+    Generates states after unification to input `stateObject`.
     Returns a list of `State` objects.
-    This list may be empty.  
+    This list may be empty.
     The argument `stateObject` is not modified.
     """
     assignments = {}
@@ -3072,12 +3425,12 @@ The argument <code>stateObject</code> is not modified.</p></div>
 
     
   
-    <div class="desc"><p>Assigns groundterms to unassigned variables in <code>unassignedVariableList</code>.<br />
+    <div class="desc"><p>Assigns groundterms to unassigned variables in <code>unassignedVariableList</code>.
 Returns a list of <code>State</code> objects possible after
-application of <code>this</code> Action to <code>stateObject</code>.<br />
-<code>assignments</code> is a dictionary of assignments already made.<br />
-Keys in this are <code>value</code> parameters of <code>Arg</code> objects.<br />
-Values in this dictionary are <code>Arg</code> objects.<br />
+application of <code>this</code> Action to <code>stateObject</code>.
+<code>assignments</code> is a dictionary of assignments already made.
+Keys in this are <code>value</code> parameters of <code>Arg</code> objects.
+Values in this dictionary are <code>Arg</code> objects.
 <code>retList</code> is a list of <code>State</code> objects already generated.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.Action.getStatesOnApplicationUtil', this);">Show source &equiv;</a></p>
@@ -3091,12 +3444,12 @@ Values in this dictionary are <code>Arg</code> objects.<br />
     inHeuristicMode=False,
     ):
     """
-    Assigns groundterms to unassigned variables in `unassignedVariableList`.  
+    Assigns groundterms to unassigned variables in `unassignedVariableList`.
     Returns a list of `State` objects possible after
-    application of `this` Action to `stateObject`.  
-    `assignments` is a dictionary of assignments already made.  
-    Keys in this are `value` parameters of `Arg` objects.  
-    Values in this dictionary are `Arg` objects.  
+    application of `this` Action to `stateObject`.
+    `assignments` is a dictionary of assignments already made.
+    Keys in this are `value` parameters of `Arg` objects.
+    Values in this dictionary are `Arg` objects.
     `retList` is a list of `State` objects already generated.
     """
     if len(unassignedVariableList) == 0:
@@ -3533,14 +3886,14 @@ Values in this dictionary are <code>Arg</code> objects.<br />
       <p id="p1.State" class="name">class <span class="ident">State</span></p>
       
   
-    <div class="desc"><p>This class represents the current state.<br />
+    <div class="desc"><p>This class represents the current state.
 This represents a conjuction of <code>TrueSentence</code> objects.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.State', this);">Show source &equiv;</a></p>
   <div id="source-p1.State" class="source">
     <pre><code>class State:
     """
-    This class represents the current state.  
+    This class represents the current state.
     This represents a conjuction of `TrueSentence` objects.
     """
 
@@ -3592,9 +3945,9 @@ This represents a conjuction of <code>TrueSentence</code> objects.</p></div>
 
     def tracePath(self):
         """
-        Trace path from initial state to `self`.  
-        Returns a dictionary with:  
-        (1) A string with actions (in order) in plan.  
+        Trace path from initial state to `self`.
+        Returns a dictionary with:
+        (1) A string with actions (in order) in plan.
         (2) A list of states in the plan.
         """
 
@@ -3648,7 +4001,7 @@ This represents a conjuction of <code>TrueSentence</code> objects.</p></div>
 
     def hasTrueSentences(self, trueSentenceList):
         """
-        Checks if all the sentences in `trueSentenceList` exist in the state.  
+        Checks if all the sentences in `trueSentenceList` exist in the state.
         If they do not, returns `False`.
         """
 
@@ -3666,7 +4019,7 @@ This represents a conjuction of <code>TrueSentence</code> objects.</p></div>
     def isGoalState(self, goalState, inHeuristicMode=False):
         """
         Checks if `state` is a goal state by comparing
-        it to `goalState`. Returns `True` if it is, and `False` otherwise.  
+        it to `goalState`. Returns `True` if it is, and `False` otherwise.
         Essentially compares two states.
         """
 
@@ -3680,7 +4033,7 @@ This represents a conjuction of <code>TrueSentence</code> objects.</p></div>
         Checks equality of one `State` object with another.
         """
 
-        return cmpList(self.trueSentenceList, other.trueSentenceList)
+        return cmpListNoOrder(self.trueSentenceList, other.trueSentenceList)
 
     def __ne__(self, other):
         """
@@ -3719,9 +4072,10 @@ This represents a conjuction of <code>TrueSentence</code> objects.</p></div>
                 retList = action.getStatesOnApplication(currState, True)
                 if len(retList) > 0:
                     currState = retList[0]
-                    count += 1
+                count += 1
 
-        self.heuristicValue = currState.heuristicValue
+        # self.heuristicValue = currState.heuristicValue
+        self.heuristicValue = count
 
     def getNextStates(self, actionList, inHeuristicMode=False):
         """
@@ -3878,14 +4232,14 @@ and returns all the states generated.</p></div>
 
     
   
-    <div class="desc"><p>Checks if all the sentences in <code>trueSentenceList</code> exist in the state.<br />
+    <div class="desc"><p>Checks if all the sentences in <code>trueSentenceList</code> exist in the state.
 If they do not, returns <code>False</code>.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.State.hasTrueSentences', this);">Show source &equiv;</a></p>
   <div id="source-p1.State.hasTrueSentences" class="source">
     <pre><code>def hasTrueSentences(self, trueSentenceList):
     """
-    Checks if all the sentences in `trueSentenceList` exist in the state.  
+    Checks if all the sentences in `trueSentenceList` exist in the state.
     If they do not, returns `False`.
     """
     for newSentence in trueSentenceList:
@@ -3913,7 +4267,7 @@ If they do not, returns <code>False</code>.</p></div>
     
   
     <div class="desc"><p>Checks if <code>state</code> is a goal state by comparing
-it to <code>goalState</code>. Returns <code>True</code> if it is, and <code>False</code> otherwise.<br />
+it to <code>goalState</code>. Returns <code>True</code> if it is, and <code>False</code> otherwise.
 Essentially compares two states.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.State.isGoalState', this);">Show source &equiv;</a></p>
@@ -3921,7 +4275,7 @@ Essentially compares two states.</p></div>
     <pre><code>def isGoalState(self, goalState, inHeuristicMode=False):
     """
     Checks if `state` is a goal state by comparing
-    it to `goalState`. Returns `True` if it is, and `False` otherwise.  
+    it to `goalState`. Returns `True` if it is, and `False` otherwise.
     Essentially compares two states.
     """
     if not inHeuristicMode:
@@ -3985,8 +4339,9 @@ Essentially compares two states.</p></div>
             retList = action.getStatesOnApplication(currState, True)
             if len(retList) > 0:
                 currState = retList[0]
-                count += 1
-    self.heuristicValue = currState.heuristicValue
+            count += 1
+    # self.heuristicValue = currState.heuristicValue
+    self.heuristicValue = count
 </code></pre>
   </div>
 </div>
@@ -4002,18 +4357,18 @@ Essentially compares two states.</p></div>
 
     
   
-    <div class="desc"><p>Trace path from initial state to <code>self</code>.<br />
-Returns a dictionary with:<br />
-(1) A string with actions (in order) in plan.<br />
+    <div class="desc"><p>Trace path from initial state to <code>self</code>.
+Returns a dictionary with:
+(1) A string with actions (in order) in plan.
 (2) A list of states in the plan.</p></div>
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.State.tracePath', this);">Show source &equiv;</a></p>
   <div id="source-p1.State.tracePath" class="source">
     <pre><code>def tracePath(self):
     """
-    Trace path from initial state to `self`.  
-    Returns a dictionary with:  
-    (1) A string with actions (in order) in plan.  
+    Trace path from initial state to `self`.
+    Returns a dictionary with:
+    (1) A string with actions (in order) in plan.
     (2) A list of states in the plan.
     """
     pathList = []
@@ -4137,7 +4492,6 @@ and <code>self.prevAssignments</code>.</p></div>
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.TrueSentence', this);">Show source &equiv;</a></p>
   <div id="source-p1.TrueSentence" class="source">
     <pre><code>class TrueSentence:
-
     """
     This class represents a sentence whose truth value is "True".
     """
@@ -4179,7 +4533,7 @@ and <code>self.prevAssignments</code>.</p></div>
 
         return self.propositionType == other.propositionType \
             and self.isNegation == other.isNegation \
-            and cmpList(self.argList, other.argList)
+            and cmpListWithOrder(self.argList, other.argList)
 
     def __ne__(self, other):
         """
@@ -4209,6 +4563,137 @@ and <code>self.prevAssignments</code>.</p></div>
         resultStr += ') '
 
         return resultStr
+
+    def getNewGoals(self, currState, actionList):
+        """
+        Returns a dictionary of data required for new goals of GSP.
+        Format of returned dictionary is :
+            `trueSentenceList` : list of new `TrueSentence` objects.
+            `action` : element of `actionList` that has to be applied.
+            `assignments` : assignments used for applying returned action.
+        `currState` is the current `State`.
+        `actionList` is the list of possible actions in given world.
+        Returns `None` if the goal is not reachable.
+        """
+
+        pickAction = actionList[0]
+        unstackAction = actionList[1]
+        releaseAction = actionList[2]
+        stackAction = actionList[3]
+
+        retDict = {}
+        possibleActions = []
+        assignments = {}
+
+        possibleAssignments = list(currState.groundTermList)
+        if self.propositionType == PropositionTypes.ON:
+            nextAction = stackAction
+        elif self.propositionType == PropositionTypes.ONTABLE:
+            nextAction = releaseAction
+        elif self.propositionType == PropositionTypes.EMPTY:
+            nextAction = releaseAction
+        elif self.propositionType == PropositionTypes.HOLD:
+            checkSentence = TrueSentence(PropositionTypes.ONTABLE, self.argList, False)
+            if currState.hasTrueSentences([checkSentence]):
+                nextAction = pickAction
+            else:
+                nextAction = unstackAction
+        elif self.propositionType == PropositionTypes.CLEAR:
+            checkSentence = TrueSentence(PropositionTypes.HOLD, self.argList, False)
+            if currState.hasTrueSentences([checkSentence]):
+                nextAction = releaseAction
+            else:
+                nextAction = unstackAction
+        else:
+            return None
+
+        for trueSentence in nextAction.effectList:
+            if trueSentence.propositionType == self.propositionType \
+                    and self.isNegation == trueSentence.isNegation:
+                for ii in range(len(self.argList)):
+                    assignments[trueSentence.argList[ii].value] = \
+                            self.argList[ii]
+                if nextAction == unstackAction:
+                    if self.propositionType == PropositionTypes.HOLD:
+                        for terminal in possibleAssignments:
+                            checkSentence = TrueSentence(PropositionTypes.ON, \
+                                    [self.argList[0], terminal], False)
+                            if currState.hasTrueSentences([checkSentence]):
+                                possibleAssignments = [terminal]
+                                break
+                    elif self.propositionType == PropositionTypes.CLEAR:
+                        for terminal in possibleAssignments:
+                            checkSentence = TrueSentence(PropositionTypes.ON, \
+                                    [terminal, self.argList[0]], False)
+                            if currState.hasTrueSentences([checkSentence]):
+                                possibleAssignments = [terminal]
+                                break
+                    else:
+                        return None
+                elif self.propositionType == PropositionTypes.EMPTY:
+                    for terminal in possibleAssignments:
+                            checkSentence = TrueSentence(PropositionTypes.HOLD, \
+                                    [terminal], False)
+                            if currState.hasTrueSentences([checkSentence]):
+                                possibleAssignments = [terminal]
+                                break
+
+                break
+
+
+#             for trueSentence in action.effectList:
+#                 if trueSentence.propositionType == self.propositionType \
+#                         and self.isNegation == trueSentence.isNegation:
+#                     assignments = {}
+#                     possibleAssignments = list(currState.groundTermList)
+#                     for ii in range(len(trueSentence.argList)):
+#                         assignments[trueSentence.argList[ii].value] = \
+#                                 self.argList[ii]
+#                         possibleAssignments.remove(self.argList[ii])
+#                     possibleActions.append([action, assignments, possibleAssignments])
+
+#         if len(possibleActions) == 0:
+#             return None
+
+#         random.shuffle(possibleActions)
+#         nextAction = possibleActions[0][0]
+#         assignments = possibleActions[0][1]
+#         possibleAssignments = possibleActions[0][2]
+        retDict['action'] = nextAction
+
+        for arg in nextAction.variableTermList:
+            if not assignments.has_key(arg.value):
+                if len(possibleAssignments) == 0:
+                    break
+                randomIndex = random.randrange(0, len(possibleAssignments))
+                assignments[arg.value] = possibleAssignments[randomIndex]
+                possibleAssignments.pop(randomIndex)
+
+        retDict['assignments'] = assignments
+
+        retTrueList = []
+        for trueSentence in nextAction.preconditionList:
+            assignedSentence = TrueSentence(trueSentence.propositionType, \
+                    trueSentence.argList, trueSentence.isNegation)
+            newArgList = []
+            for arg in assignedSentence.argList:
+                if arg.isVariable():
+                    newArgList.append(assignments[arg.value])
+                else:
+                    newArgList.append(arg)
+            assignedSentence.argList = newArgList
+            retTrueList.append(assignedSentence)
+
+        retDict['trueSentenceList'] = retTrueList
+
+        print("***new***")
+        print("State:")
+        print(currState)
+        print("Input:")
+        print(self)
+        printDict(retDict)
+
+        return retDict
 </code></pre>
   </div>
 </div>
@@ -4259,6 +4744,147 @@ and <code>self.prevAssignments</code>.</p></div>
     """
     Truth value of the statement for Goal Stack planner.
     """
+</code></pre>
+  </div>
+</div>
+
+  </div>
+  
+            
+  <div class="item">
+    <div class="name def" id="p1.TrueSentence.getNewGoals">
+    <p>def <span class="ident">getNewGoals</span>(</p><p>self, currState, actionList)</p>
+    </div>
+    
+
+    
+  
+    <div class="desc"><p>Returns a dictionary of data required for new goals of GSP.
+Format of returned dictionary is :
+    <code>trueSentenceList</code> : list of new <code>TrueSentence</code> objects.
+    <code>action</code> : element of <code>actionList</code> that has to be applied.
+    <code>assignments</code> : assignments used for applying returned action.
+<code>currState</code> is the current <code>State</code>.
+<code>actionList</code> is the list of possible actions in given world.
+Returns <code>None</code> if the goal is not reachable.</p></div>
+  <div class="source_cont">
+  <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-p1.TrueSentence.getNewGoals', this);">Show source &equiv;</a></p>
+  <div id="source-p1.TrueSentence.getNewGoals" class="source">
+    <pre><code>def getNewGoals(self, currState, actionList):
+    """
+    Returns a dictionary of data required for new goals of GSP.
+    Format of returned dictionary is :
+        `trueSentenceList` : list of new `TrueSentence` objects.
+        `action` : element of `actionList` that has to be applied.
+        `assignments` : assignments used for applying returned action.
+    `currState` is the current `State`.
+    `actionList` is the list of possible actions in given world.
+    Returns `None` if the goal is not reachable.
+    """
+    pickAction = actionList[0]
+    unstackAction = actionList[1]
+    releaseAction = actionList[2]
+    stackAction = actionList[3]
+    retDict = {}
+    possibleActions = []
+    assignments = {}
+    possibleAssignments = list(currState.groundTermList)
+    if self.propositionType == PropositionTypes.ON:
+        nextAction = stackAction
+    elif self.propositionType == PropositionTypes.ONTABLE:
+        nextAction = releaseAction
+    elif self.propositionType == PropositionTypes.EMPTY:
+        nextAction = releaseAction
+    elif self.propositionType == PropositionTypes.HOLD:
+        checkSentence = TrueSentence(PropositionTypes.ONTABLE, self.argList, False)
+        if currState.hasTrueSentences([checkSentence]):
+            nextAction = pickAction
+        else:
+            nextAction = unstackAction
+    elif self.propositionType == PropositionTypes.CLEAR:
+        checkSentence = TrueSentence(PropositionTypes.HOLD, self.argList, False)
+        if currState.hasTrueSentences([checkSentence]):
+            nextAction = releaseAction
+        else:
+            nextAction = unstackAction
+    else:
+        return None
+    for trueSentence in nextAction.effectList:
+        if trueSentence.propositionType == self.propositionType \
+                and self.isNegation == trueSentence.isNegation:
+            for ii in range(len(self.argList)):
+                assignments[trueSentence.argList[ii].value] = \
+                        self.argList[ii]
+            if nextAction == unstackAction:
+                if self.propositionType == PropositionTypes.HOLD:
+                    for terminal in possibleAssignments:
+                        checkSentence = TrueSentence(PropositionTypes.ON, \
+                                [self.argList[0], terminal], False)
+                        if currState.hasTrueSentences([checkSentence]):
+                            possibleAssignments = [terminal]
+                            break
+                elif self.propositionType == PropositionTypes.CLEAR:
+                    for terminal in possibleAssignments:
+                        checkSentence = TrueSentence(PropositionTypes.ON, \
+                                [terminal, self.argList[0]], False)
+                        if currState.hasTrueSentences([checkSentence]):
+                            possibleAssignments = [terminal]
+                            break
+                else:
+                    return None
+            elif self.propositionType == PropositionTypes.EMPTY:
+                for terminal in possibleAssignments:
+                        checkSentence = TrueSentence(PropositionTypes.HOLD, \
+                                [terminal], False)
+                        if currState.hasTrueSentences([checkSentence]):
+                            possibleAssignments = [terminal]
+                            break
+            break
+          for trueSentence in action.effectList:
+              if trueSentence.propositionType == self.propositionType \
+                      and self.isNegation == trueSentence.isNegation:
+                  assignments = {}
+                  possibleAssignments = list(currState.groundTermList)
+                  for ii in range(len(trueSentence.argList)):
+                      assignments[trueSentence.argList[ii].value] = \
+                              self.argList[ii]
+                      possibleAssignments.remove(self.argList[ii])
+                  possibleActions.append([action, assignments, possibleAssignments])
+      if len(possibleActions) == 0:
+          return None
+      random.shuffle(possibleActions)
+      nextAction = possibleActions[0][0]
+      assignments = possibleActions[0][1]
+      possibleAssignments = possibleActions[0][2]
+    retDict['action'] = nextAction
+    for arg in nextAction.variableTermList:
+        if not assignments.has_key(arg.value):
+            if len(possibleAssignments) == 0:
+                break
+            randomIndex = random.randrange(0, len(possibleAssignments))
+            assignments[arg.value] = possibleAssignments[randomIndex]
+            possibleAssignments.pop(randomIndex)
+    retDict['assignments'] = assignments
+    retTrueList = []
+    for trueSentence in nextAction.preconditionList:
+        assignedSentence = TrueSentence(trueSentence.propositionType, \
+                trueSentence.argList, trueSentence.isNegation)
+        newArgList = []
+        for arg in assignedSentence.argList:
+            if arg.isVariable():
+                newArgList.append(assignments[arg.value])
+            else:
+                newArgList.append(arg)
+        assignedSentence.argList = newArgList
+        retTrueList.append(assignedSentence)
+    retDict['trueSentenceList'] = retTrueList
+    print("***new***")
+    print("State:")
+    print(currState)
+    print("Input:")
+    print(self)
+    printDict(retDict)
+    return retDict
 </code></pre>
   </div>
 </div>
