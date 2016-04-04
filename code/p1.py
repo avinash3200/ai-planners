@@ -402,31 +402,95 @@ class TrueSentence:
         Returns `None` if the goal is not reachable.
         """
 
+        pickAction = actionList[0]
+        unstackAction = actionList[1]
+        releaseAction = actionList[2]
+        stackAction = actionList[3]
+
         retDict = {}
         possibleActions = []
-        for action in actionList:
-            for trueSentence in action.effectList:
-                if trueSentence.propositionType == self.propositionType \
-                        and self.isNegation == trueSentence.isNegation:
-                    assignments = {}
-                    possibleAssignments = list(currState.groundTermList)
-                    for ii in range(len(trueSentence.argList)):
-                        assignments[trueSentence.argList[ii].value] = \
-                                self.argList[ii]
-                        possibleAssignments.remove(self.argList[ii])
-                    possibleActions.append([action, assignments, possibleAssignments])
+        assignments = {}
 
-        if len(possibleActions) == 0:
+        possibleAssignments = list(currState.groundTermList)
+        if self.propositionType == PropositionTypes.ON:
+            nextAction = stackAction
+        elif self.propositionType == PropositionTypes.ONTABLE:
+            nextAction = releaseAction
+        elif self.propositionType == PropositionTypes.EMPTY:
+            nextAction = releaseAction
+        elif self.propositionType == PropositionTypes.HOLD:
+            checkSentence = TrueSentence(PropositionTypes.ONTABLE, self.argList, False)
+            if currState.hasTrueSentences([checkSentence]):
+                nextAction = pickAction
+            else:
+                nextAction = unstackAction
+        elif self.propositionType == PropositionTypes.CLEAR:
+            checkSentence = TrueSentence(PropositionTypes.HOLD, self.argList, False)
+            if currState.hasTrueSentences([checkSentence]):
+                nextAction = releaseAction
+            else:
+                nextAction = unstackAction
+        else:
             return None
 
-        random.shuffle(possibleActions)
-        nextAction = possibleActions[0][0]
-        assignments = possibleActions[0][1]
-        possibleAssignments = possibleActions[0][2]
+        for trueSentence in nextAction.effectList:
+            if trueSentence.propositionType == self.propositionType \
+                    and self.isNegation == trueSentence.isNegation:
+                for ii in range(len(self.argList)):
+                    assignments[trueSentence.argList[ii].value] = \
+                            self.argList[ii]
+                if nextAction == unstackAction:
+                    if self.propositionType == PropositionTypes.HOLD:
+                        for terminal in possibleAssignments:
+                            checkSentence = TrueSentence(PropositionTypes.ON, \
+                                    [self.argList[0], terminal], False)
+                            if currState.hasTrueSentences([checkSentence]):
+                                possibleAssignments = [terminal]
+                                break
+                    elif self.propositionType == PropositionTypes.CLEAR:
+                        for terminal in possibleAssignments:
+                            checkSentence = TrueSentence(PropositionTypes.ON, \
+                                    [terminal, self.argList[0]], False)
+                            if currState.hasTrueSentences([checkSentence]):
+                                possibleAssignments = [terminal]
+                                break
+                    else:
+                        return None
+                elif self.propositionType == PropositionTypes.EMPTY:
+                    for terminal in possibleAssignments:
+                            checkSentence = TrueSentence(PropositionTypes.HOLD, \
+                                    [terminal], False)
+                            if currState.hasTrueSentences([checkSentence]):
+                                possibleAssignments = [terminal]
+                                break
+
+                break
+
+
+#             for trueSentence in action.effectList:
+#                 if trueSentence.propositionType == self.propositionType \
+#                         and self.isNegation == trueSentence.isNegation:
+#                     assignments = {}
+#                     possibleAssignments = list(currState.groundTermList)
+#                     for ii in range(len(trueSentence.argList)):
+#                         assignments[trueSentence.argList[ii].value] = \
+#                                 self.argList[ii]
+#                         possibleAssignments.remove(self.argList[ii])
+#                     possibleActions.append([action, assignments, possibleAssignments])
+
+#         if len(possibleActions) == 0:
+#             return None
+
+#         random.shuffle(possibleActions)
+#         nextAction = possibleActions[0][0]
+#         assignments = possibleActions[0][1]
+#         possibleAssignments = possibleActions[0][2]
         retDict['action'] = nextAction
 
         for arg in nextAction.variableTermList:
             if not assignments.has_key(arg.value):
+                if len(possibleAssignments) == 0:
+                    break
                 randomIndex = random.randrange(0, len(possibleAssignments))
                 assignments[arg.value] = possibleAssignments[randomIndex]
                 possibleAssignments.pop(randomIndex)
@@ -448,10 +512,12 @@ class TrueSentence:
 
         retDict['trueSentenceList'] = retTrueList
 
-        # print("***new***")
-        # print("Input:")
-        # print(self)
-        # printDict(retDict)
+        print("***new***")
+        print("State:")
+        print(currState)
+        print("Input:")
+        print(self)
+        printDict(retDict)
 
         return retDict
 
