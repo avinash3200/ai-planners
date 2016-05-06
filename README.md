@@ -2,6 +2,8 @@
 
 Code documentation is available <a href="http://tushar-agarwal.github.io/ai-planners/" target="_blank">here</a>.
 
+Sample text cases are present: `1.txt`, `2.txt`, `3.txt`, `4.txt`, `5.txt` and `6.txt`.
+
 ### Description
 
 `p1.py` implements:
