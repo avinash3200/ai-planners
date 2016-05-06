@@ -2,7 +2,7 @@
 
 Code documentation is available <a href="http://tushar-agarwal.github.io/ai-planners/" target="_blank">here</a>.
 
-Sample text cases are present: `1.txt`, `2.txt`, `3.txt`, `4.txt`, `5.txt` and `6.txt`.
+Sample test cases are present: `1.txt`, `2.txt`, `3.txt`, `4.txt`, `5.txt` and `6.txt`.
 
 ### Description
 
@@ -102,3 +102,5 @@ control the branching factor which otherwise, if only technique `(1)` was used, 
 ##### A note on the Goal Stack planner
 
 A problem specific heuristic is utilized to decide on relevant actions to insert onto the goal stack. The generalized goal stack planner is also implemented, but performs worse than the specialized version. 
+
+*Some data for this readme is drawn from lab assignments present <a href="http://cse.iitrpr.ac.in/ckn/courses/s2016/csl452/csl452.html#labs" target="_blank">here</a>.*
