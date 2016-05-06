@@ -17,42 +17,42 @@ The are designed for the blocks world problem. The blocks world is described as 
 The propositions for this problem are as follows.
 
 ```
-(on *blocka* *blocka*) – meaning *blocka* is stacked on *blockb* 
-(ontable *block*)
-(clear *block*)
-(hold *block*)
+(on blocka blocka) – meaning "blocka" is stacked on "blockb" 
+(ontable block)
+(clear block)
+(hold block)
 (empty)
 ```
 
 There are 4 actions specified using the following schemas.
 
 ```
-action(pick *block*)
-preconditions – (ontable *block*) (clear *block*) (empty)
-effects – (hold *block*) ~(clear *block*) ~(empty) ~(ontable *block*)
+action(pick block)
+preconditions – (ontable block) (clear block) (empty)
+effects – (hold block) ~(clear block) ~(empty) ~(ontable block)
 ```
 
 ```
-action(unstack *blocka* *blockb*)
-preconditions – (on *blocka* *blockb*) (clear *blocka*) (empty)
-effects – (hold *blocka*) clear(*blockb*) ~(on *blocka* *blockb*) ~(empty) ~(clear *blocka*)
+action(unstack blocka blockb)
+preconditions – (on blocka blockb) (clear blocka) (empty)
+effects – (hold blocka) clear(blockb) ~(on blocka blockb) ~(empty) ~(clear blocka)
 ```
 
 ```
-action(release *block*)
-preconditions – (hold *block*)
-effects – (ontable *block*) (clear *block*) (empty) ~(hold *block*)
+action(release block)
+preconditions – (hold block)
+effects – (ontable block) (clear block) (empty) ~(hold block)
 ```
 
 ```
-action(stack *blocka* *blockb*)
-preconditions – clear(*blockb*) (hold *blocka*)
-effects – (on *blocka* *blockb*) (clear *blocka*) (empty) ~(hold *blocka*) ~(clear *blockb*)
+action(stack blocka blockb)
+preconditions – clear(blockb) (hold blocka)
+effects – (on blocka blockb) (clear blocka) (empty) ~(hold blocka) ~(clear blockb)
 ```
 
 In `p1.py`, actions are encoded in a way which makes modification easy.
 
-A state will be specified as a list of propositions that hold good in that state separated by a space in a single line. For example, in a 3-blocks world, a state can be `(on *1* *2*) (clear *1*) (ontable *3*) (ontable *2*) (clear *3*) (empty)`.
+A state will be specified as a list of propositions that hold good in that state separated by a space in a single line. For example, in a 3-blocks world, a state can be `(on 1 2) (clear 1) (ontable 3) (ontable 2) (clear 3) (empty)`.
 
 Given a text file containing the initial and goal state description, and the choice of the planning approach, `p1.py` outputs a file containing the plan from the initial state to the goal state.
 
