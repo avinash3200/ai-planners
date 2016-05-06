@@ -16,29 +16,39 @@ The are designed for the blocks world problem. The blocks world is described as 
 
 The propositions for this problem are as follows.
 
-> (on *blocka* *blocka*) – meaning *blocka* is stacked on *blockb* 
-> (ontable *block*)
-> (clear *block*)
-> (hold *block*)
-> (empty)
+```
+(on *blocka* *blocka*) – meaning *blocka* is stacked on *blockb* 
+(ontable *block*)
+(clear *block*)
+(hold *block*)
+(empty)
+```
 
 There are 4 actions specified using the following schemas.
 
-> action(pick *block*)
-> preconditions – (ontable *block*) (clear *block*) (empty)
-> effects – (hold *block*) ~(clear *block*) ~(empty) ~(ontable *block*)
+```
+action(pick *block*)
+preconditions – (ontable *block*) (clear *block*) (empty)
+effects – (hold *block*) ~(clear *block*) ~(empty) ~(ontable *block*)
+```
 
-> action(unstack *blocka* *blockb*)
-> preconditions – (on *blocka* *blockb*) (clear *blocka*) (empty)
-> effects – (hold *blocka*) clear(*blockb*) ~(on *blocka* *blockb*) ~(empty) ~(clear *blocka*)
+```
+action(unstack *blocka* *blockb*)
+preconditions – (on *blocka* *blockb*) (clear *blocka*) (empty)
+effects – (hold *blocka*) clear(*blockb*) ~(on *blocka* *blockb*) ~(empty) ~(clear *blocka*)
+```
 
-> action(release *block*)
-> preconditions – (hold *block*)
-> effects – (ontable *block*) (clear *block*) (empty) ~(hold *block*)
+```
+action(release *block*)
+preconditions – (hold *block*)
+effects – (ontable *block*) (clear *block*) (empty) ~(hold *block*)
+```
 
-> action(stack *blocka* *blockb*)
-> preconditions – clear(*blockb*) (hold *blocka*)
-> effects – (on *blocka* *blockb*) (clear *blocka*) (empty) ~(hold *blocka*) ~(clear *blockb*)
+```
+action(stack *blocka* *blockb*)
+preconditions – clear(*blockb*) (hold *blocka*)
+effects – (on *blocka* *blockb*) (clear *blocka*) (empty) ~(hold *blocka*) ~(clear *blockb*)
+```
 
 In `p1.py`, actions are encoded in a way which makes modification easy.
 
@@ -54,23 +64,27 @@ Here, the `p.txt` refers to a file with a blocks world problem instance as per t
 #### Input  
 The input argument is the name of the text file containing a blocks world problem instance. Specifically, the format of the input file is as follows.
 
-> N
-> planner
-> initial
-> State description
-> goal
-> State description
+```
+N
+planner
+initial
+State description
+goal
+State description
+```
 
 The first line is the number of blocks in the blocks world. The second line indicates the choice of the planner (`f`-forward planner with BFS, `a`-forward planner A* search and `g`- goal stack planner). The third line indicates that the line following it contains the complete description of the initial state. This is followed by the line containing the term goal. This is in turn followed by the line that completely describes the goal state.
 
 #### Output
 The code writes to a text file in the following format.
 
-> NA
-> Action 1
-> Action 2
-> ...
-> Action NA
+```
+NA
+Action 1
+Action 2
+...
+Action NA
+```
 
 The first line indicates the number of actions in the plan. Each line then presents the action that has to be taken. 
 
@@ -81,7 +95,7 @@ To calculate a heuristic value for a state, the heuristic computation algorithm 
 1. Delete lists are ignored when a state is expanded. Hence, monotonic progress is made
 towards the goal state.
 2. When a state is expanded, all possible actions are applied at once, together. This helps to
-control the branching factor which otherwise, if only technique (1) was used, may result in the creation of extremely large number of states.
+control the branching factor which otherwise, if only technique `(1)` was used, may result in the creation of extremely large number of states.
 
 ##### A note on the Goal Stack planner
 
