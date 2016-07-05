@@ -15,7 +15,7 @@ Sample test cases are present: `1.txt`, `2.txt`, `3.txt`, `4.txt`, `5.txt` and `
 
 The are designed for the blocks world problem. The blocks world is described as follows.
 
-> There are `N` blocks, table and a robotic arm. Blocks are identified by integers `1` to `N`. Each block can sit on top of another block or on the table. There can be a stack of blocks of arbitrary height. However only one block can be directly on another block. No two blocks can be sitting directly on the same block. The bottom most block of a stack must be on the table. The table can hold any number of blocks. If there is no block on top of a block, then the block is clear. The robotic arm can hold only one block. If the robotic arm does not hold any block, it is empty.
+> There are `N` blocks, table and a robotic arm. Blocks are identified by integers `1` to `N`. Each block can sit on top of another block or on the table. There can be a stack of blocks of arbitrary height. However, only one block can be directly on another block. No two blocks can be sitting directly on the same block. The bottom most block of a stack must be on the table. The table can hold any number of blocks. If there is no block on top of a block, then the block is clear. The robotic arm can hold only one block. If the robotic arm does not hold any block, it is empty.
 
 The propositions for this problem are as follows.
 
@@ -98,10 +98,10 @@ To calculate a heuristic value for a state, the heuristic computation algorithm 
 1. Delete lists are ignored when a state is expanded. Hence, monotonic progress is made
 towards the goal state.
 2. When a state is expanded, all possible actions are applied at once, together. This helps to
-control the branching factor which otherwise, if only technique `(1)` was used, may result in the creation of extremely large number of states.
+control the branching factor which otherwise, if only technique `(1)` was used, may result in the creation of an extremely large number of states.
 
 ##### A note on the Goal Stack planner
 
-A problem specific heuristic is utilized to decide on relevant actions to insert onto the goal stack. The generalized goal stack planner is also implemented, but performs worse than the specialized version. 
+A problem-specific heuristic is utilized to decide on relevant actions to insert onto the goal stack. The generalized goal stack planner is also implemented, but performs worse than the specialized version. 
 
 *Some data for this readme is drawn from lab assignments present <a href="http://cse.iitrpr.ac.in/ckn/courses/s2016/csl452/csl452.html#labs" target="_blank">here</a>.*
