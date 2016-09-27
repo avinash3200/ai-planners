@@ -1,7 +1,7 @@
 ## Implementation of AI planners
-[![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/tushar-agarwal/ai-planners/blob/master/LICENSE.md) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/479703ffd6ac4b53b8c377e16bcd6658)](https://www.codacy.com/app/tushar-agarwal/ai-planners?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tushar-agarwal/ai-planners&amp;utm_campaign=Badge_Grade) [![Category](https://img.shields.io/badge/Category-Coursework-ff69b4.svg)](https://github.com/tushar-agarwal/ai-planners)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/agarwalt/ai-planners/blob/master/LICENSE.md) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/479703ffd6ac4b53b8c377e16bcd6658)](https://www.codacy.com/app/agarwalt/ai-planners?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tushar-agarwal/ai-planners&amp;utm_campaign=Badge_Grade) [![Category](https://img.shields.io/badge/Category-Coursework-ff69b4.svg)](https://github.com/agarwalt/ai-planners)
 
-Code documentation is available <a href="http://tushar-agarwal.github.io/ai-planners/" target="_blank">here</a>.
+Code documentation is available <a href="http://agarwalt.github.io/ai-planners/" target="_blank">here</a>.
 
 Sample test cases are present: `1.txt`, `2.txt`, `3.txt`, `4.txt`, `5.txt` and `6.txt`.
 
